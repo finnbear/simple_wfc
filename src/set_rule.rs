@@ -1,4 +1,7 @@
-use crate::{state_set::StateSet, CollapseRule, InvertDelta, Space};
+use crate::{
+    state::{State, StateSet},
+    CollapseRule, InvertDelta, Space,
+};
 use rand::{thread_rng, Rng};
 
 pub trait SetCollapseObserver {
@@ -12,30 +15,31 @@ impl SetCollapseObserver for UniformSetCollapseObserver {
     fn observe(&self, cell: &mut StateSet, _: &[Option<StateSet>]) {
         let mut final_states = Vec::new();
         cell.collect_final_states(&mut final_states);
-        *cell = final_states[thread_rng().gen_range(0..final_states.len())].clone();
+        *cell =
+            StateSet::with_states(&[final_states[thread_rng().gen_range(0..final_states.len())]]);
     }
 }
 
 pub struct SetCollapseRule<Sp: Space, O: SetCollapseObserver> {
     neighbor_offsets: Box<[Sp::CoordinateDelta]>,
-    state_rules: Box<[(StateSet, Box<[Option<StateSet>]>)]>,
+    state_rules: Box<[(State, Box<[Option<StateSet>]>)]>,
     observer: O,
 }
 
 struct StateRule {
-    state: StateSet,
+    state: State,
     allowed_neighbors: Vec<Option<StateSet>>,
 }
 
 impl StateRule {
-    fn add_allowed(&mut self, neighbor_index: usize, allowed: &StateSet) {
+    fn add_allowed(&mut self, neighbor_index: usize, allowed: State) {
         while self.allowed_neighbors.len() <= neighbor_index {
             self.allowed_neighbors.push(None);
         }
         if let Some(allowed_neighbors) = &mut self.allowed_neighbors[neighbor_index] {
-            allowed_neighbors.set_states(allowed);
+            allowed_neighbors.add(allowed);
         } else {
-            self.allowed_neighbors[neighbor_index] = Some(allowed.clone());
+            self.allowed_neighbors[neighbor_index] = Some(StateSet::with_states(&[allowed]));
         }
     }
 }
@@ -69,26 +73,18 @@ where
     ///
     /// States which do not have any allowed neighbors for a given coordinate
     /// delta will equire that those coordinates are outside of world-space.
-    pub fn allow(
-        mut self,
-        state: &StateSet,
-        neighbors: &[(Sp::CoordinateDelta, StateSet)],
-    ) -> Self {
-        let mut states = Vec::new();
-        state.collect_final_states(&mut states);
-        for state in states {
-            for (delta, neighbor) in neighbors {
-                let mut neighbor_states = Vec::new();
-                neighbor.collect_final_states(&mut neighbor_states);
-                for n_state in neighbor_states {
-                    self.allow_symmetric(&state, &n_state, delta);
-                }
+    pub fn allow(mut self, state: State, neighbors: &[(Sp::CoordinateDelta, StateSet)]) -> Self {
+        for (delta, neighbor) in neighbors {
+            let mut neighbor_states = Vec::new();
+            neighbor.collect_final_states(&mut neighbor_states);
+            for n_state in neighbor_states {
+                self.allow_symmetric(state, n_state, delta);
             }
         }
         self
     }
 
-    fn allow_symmetric(&mut self, a: &StateSet, b: &StateSet, offset: &Sp::CoordinateDelta) {
+    fn allow_symmetric(&mut self, a: State, b: State, offset: &Sp::CoordinateDelta) {
         let offset_index = self.get_offset_index(offset.clone());
         self.get_rule(a).add_allowed(offset_index, b);
         let offset_index = self.get_offset_index(offset.invert_delta());
@@ -106,14 +102,14 @@ where
         i
     }
 
-    fn get_rule(&mut self, state: &StateSet) -> &mut StateRule {
+    fn get_rule(&mut self, state: State) -> &mut StateRule {
         for i in 0..self.state_rules.len() {
-            if &self.state_rules[i].state == state {
+            if self.state_rules[i].state == state {
                 return &mut self.state_rules[i];
             }
         }
         self.state_rules.push(StateRule {
-            state: state.clone(),
+            state,
             allowed_neighbors: Vec::new(),
         });
         let index = self.state_rules.len() - 1;
@@ -127,7 +123,7 @@ where
             while proto_rule.allowed_neighbors.len() < self.neighbor_offsets.len() {
                 proto_rule.allowed_neighbors.push(None);
             }
-            remaining_state.clear_states(&proto_rule.state);
+            remaining_state.remove(proto_rule.state);
             state_rules.push((
                 proto_rule.state,
                 proto_rule.allowed_neighbors.into_boxed_slice(),
@@ -160,7 +156,7 @@ where
 
     fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
         for (state, allowed_neighbors) in &self.state_rules[..] {
-            if cell.has_any_of(state) {
+            if cell.has(*state) {
                 for i in 0..neighbors.len() {
                     if let Some(neighbor_state) = &neighbors[i] {
                         let allow = if let Some(allowed_state) = &allowed_neighbors[i] {
@@ -169,7 +165,7 @@ where
                             false
                         };
                         if !allow {
-                            cell.clear_states(state)
+                            cell.remove(*state)
                         }
                     }
                 }

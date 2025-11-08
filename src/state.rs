@@ -7,21 +7,24 @@ use std::ops::{BitAnd, BitOr, BitXor};
 #[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct StateSet(BitVec);
 
+#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
+pub struct State(pub(crate) u32);
+
+impl State {
+    /// Creates the `n`th unique state
+    pub fn state(n: u32) -> Self {
+        Self(n)
+    }
+}
+
 const FINAL_STATE_COUNT: u32 = 11;
 
 impl StateSet {
-    /// Creates the `n`th unique state
-    pub fn state(n: u32) -> Self {
-        let mut ret = BitVec::from_elem(FINAL_STATE_COUNT as usize, false);
-        ret.set(n as usize, true);
-        Self(ret)
-    }
-
     /// Creates a state representing the states numbered by members of `states`
-    pub fn with_states(states: &[u32]) -> Self {
+    pub fn with_states(states: &[State]) -> Self {
         let mut ret = BitVec::from_elem(FINAL_STATE_COUNT as usize, false);
         for i in states {
-            ret.set(*i as usize, true);
+            ret.set(i.0 as usize, true);
         }
         Self(ret)
     }
@@ -31,7 +34,11 @@ impl StateSet {
     }
 
     pub fn entropy(&self) -> u32 {
-        self.0.count_ones() as u32 - 1
+        (self.0.count_ones() as u32).saturating_sub(1)
+    }
+
+    pub fn has(&self, state: State) -> bool {
+        self.0.get(state.0 as usize).unwrap()
     }
 
     pub fn has_any_of(&self, states: &Self) -> bool {
@@ -43,6 +50,10 @@ impl StateSet {
         false
     }
 
+    pub fn remove(&mut self, state: State) {
+        self.0.set(state.0 as usize, false);
+    }
+
     pub fn clear_states(&mut self, states: &Self) {
         for (state, present) in states.0.iter().enumerate() {
             if present {
@@ -51,20 +62,24 @@ impl StateSet {
         }
     }
 
+    pub fn add(&mut self, state: State) {
+        self.0.set(state.0 as usize, true);
+    }
+
     pub fn set_states(&mut self, states: &Self) {
         self.0.or(&states.0);
     }
 
-    pub fn collect_final_states(&self, states: &mut Vec<Self>) {
+    pub fn collect_final_states(&self, states: &mut Vec<State>) {
         for (state, present) in self.0.iter().enumerate() {
             if present {
-                states.push(Self::state(state as u32));
+                states.push(State::state(state as u32));
             }
         }
     }
 }
 
-impl BitOr for StateSet {
+impl BitOr<Self> for StateSet {
     type Output = Self;
 
     fn bitor(mut self, rhs: Self) -> Self::Output {
@@ -87,6 +102,23 @@ impl BitXor for StateSet {
 
     fn bitxor(mut self, rhs: Self) -> Self::Output {
         self.0.xor(&rhs.0);
+        self
+    }
+}
+
+impl BitOr for State {
+    type Output = StateSet;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        StateSet::with_states(&[self, rhs])
+    }
+}
+
+impl BitOr<State> for StateSet {
+    type Output = Self;
+
+    fn bitor(mut self, rhs: State) -> Self::Output {
+        self.add(rhs);
         self
     }
 }

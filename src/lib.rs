@@ -10,14 +10,14 @@ mod collapse_rule;
 pub mod set_rule;
 mod space;
 pub mod square_grid;
-pub mod state_set;
+pub mod state;
 
 use std::collections::{HashSet, VecDeque};
 
 pub use collapse_rule::*;
 use rand::{thread_rng, Rng};
 pub use space::*;
-use state_set::StateSet;
+use state::StateSet;
 
 fn find_next_to_collapse<Sp: Space>(
     unresoved_set: &mut HashSet<Sp::Coordinate>,
@@ -55,11 +55,11 @@ pub fn collapse<Rule: CollapseRule<Sp>, Sp: Space>(space: &mut Sp, rule: &Rule) 
     let mut resolved_set = HashSet::new();
     let mut lowest_entropy_set = Vec::new();
     let neighbor_directions = rule.neighbor_offsets();
-    for coord in &space.coordinate_list()[..] {
-        if space[*coord].entropy() > 0 {
-            unresolved_set.insert(*coord);
+    space.visit_coordinates(|coord| {
+        if space[coord].entropy() > 0 {
+            unresolved_set.insert(coord);
         }
-    }
+    });
     let mut neighbors = vec![None; neighbor_directions.len()].into_boxed_slice();
     let mut neighbor_states =
         vec![Option::<StateSet>::None; neighbor_directions.len()].into_boxed_slice();

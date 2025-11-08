@@ -1,6 +1,5 @@
+use crate::{state::StateSet, InvertDelta, Space};
 use std::ops::{Index, IndexMut};
-
-use crate::{state_set::StateSet, InvertDelta, Space};
 
 /// Basic square grid implementing `crate::Space`
 ///
@@ -60,14 +59,12 @@ impl Space for SquareGrid<StateSet> {
     type Coordinate = (isize, isize);
     type CoordinateDelta = (isize, isize);
 
-    fn coordinate_list(&self) -> Box<[Self::Coordinate]> {
-        let mut coords = Vec::new();
+    fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
         for y in 0..self.height {
             for x in 0..self.width {
-                coords.push((x, y));
+                visitor((x, y));
             }
         }
-        coords.into_boxed_slice()
     }
 
     fn neighbors(

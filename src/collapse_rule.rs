@@ -1,4 +1,4 @@
-use crate::{state_set::StateSet, Space};
+use crate::{state::StateSet, Space};
 
 /// Collapse rules define the relationships between a cell's possible state
 /// based on it's neighbors.

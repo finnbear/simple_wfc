@@ -21,6 +21,7 @@ exclude = [
 
 [dependencies]
 bit-vec = "0.8.0"
+ndarray = "0.17.1"
 rand = "0.8.5"
 
 [dev-dependencies]
