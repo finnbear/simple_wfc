@@ -1,4 +1,4 @@
-use crate::{AllState, CollapseRule, InvertDelta, SetState, Space, State};
+use crate::{CollapseRule, InvertDelta, Space, State};
 use rand::{thread_rng, Rng};
 
 pub trait SetCollapseObserver<S: State> {
@@ -8,7 +8,7 @@ pub trait SetCollapseObserver<S: State> {
 #[derive(Clone)]
 pub struct UniformSetCollapseObserver;
 
-impl<S: SetState + State + Clone> SetCollapseObserver<S> for UniformSetCollapseObserver {
+impl<S: State + Clone> SetCollapseObserver<S> for UniformSetCollapseObserver {
     fn observe(&self, cell: &mut S, _: &[Option<S>]) {
         let mut final_states = Vec::new();
         cell.collect_final_states(&mut final_states);
@@ -16,7 +16,7 @@ impl<S: SetState + State + Clone> SetCollapseObserver<S> for UniformSetCollapseO
     }
 }
 
-pub struct SetCollapseRule<S: SetState + State + Sized, Sp: Space<S>, O: SetCollapseObserver<S>> {
+pub struct SetCollapseRule<S: State + Sized, Sp: Space<S>, O: SetCollapseObserver<S>> {
     neighbor_offsets: Box<[Sp::CoordinateDelta]>,
     state_rules: Box<[(S, Box<[Option<S>]>)]>,
     observer: O,
@@ -27,7 +27,7 @@ struct StateRule<S> {
     allowed_neighbors: Vec<Option<S>>,
 }
 
-impl<S: SetState + Clone> StateRule<S> {
+impl<S: State + Clone> StateRule<S> {
     fn add_allowed(&mut self, neighbor_index: usize, allowed: &S) {
         while self.allowed_neighbors.len() <= neighbor_index {
             self.allowed_neighbors.push(None);
@@ -43,21 +43,14 @@ impl<S: SetState + Clone> StateRule<S> {
 /// builder for [SetCollapseRule]
 ///
 /// Automatically collects used coordinate deltas and manages creating symmetric rules from asymmetric definitions
-pub struct SetCollapseRuleBuilder<
-    S: SetState + State,
-    Sp: Space<S>,
-    O: SetCollapseObserver<S> + Clone,
-> {
+pub struct SetCollapseRuleBuilder<S: State, Sp: Space<S>, O: SetCollapseObserver<S> + Clone> {
     neighbor_offsets: Vec<Sp::CoordinateDelta>,
     state_rules: Vec<StateRule<S>>,
     observer: O,
 }
 
-impl<
-        S: AllState + SetState + State + PartialEq,
-        Sp: Space<S>,
-        O: SetCollapseObserver<S> + Clone,
-    > SetCollapseRuleBuilder<S, Sp, O>
+impl<S: State + PartialEq, Sp: Space<S>, O: SetCollapseObserver<S> + Clone>
+    SetCollapseRuleBuilder<S, Sp, O>
 where
     Sp::CoordinateDelta: Eq + Clone + InvertDelta,
 {
@@ -154,7 +147,7 @@ where
 }
 
 /// A collapse rule implementation that works with implementors of [crate::SetState]
-impl<S: SetState + State, Sp: Space<S>, O: SetCollapseObserver<S>> CollapseRule<S, Sp>
+impl<S: State, Sp: Space<S>, O: SetCollapseObserver<S>> CollapseRule<S, Sp>
     for SetCollapseRule<S, Sp, O>
 where
     Sp::CoordinateDelta: Clone,

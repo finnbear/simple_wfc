@@ -1,8 +1,8 @@
-use wfc::bitset_state::BitsetState;
+use wfc::bitset_state::StateSet;
 use wfc::square_grid::SquareGrid;
 use wfc::{collapse, set_rule::*, AllState};
 
-type S = BitsetState<3>;
+type S = StateSet<3>;
 
 const LEFT: (isize, isize) = (-1, 0);
 const RIGHT: (isize, isize) = (1, 0);

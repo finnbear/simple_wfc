@@ -46,7 +46,6 @@ impl CollapseRule<States, Grid> for Rule {
 
         for rule in RULES {
             if *x & rule.state != 0 {
-				
                 (0..4).for_each(|i| {
                     if let Some(States(neighbor)) = neighbors[i] {
                         if neighbor & rule.allowed_neighbors[i] == 0 {

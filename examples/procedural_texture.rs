@@ -1,21 +1,9 @@
 use image::{ColorType, ImageFormat, RgbImage};
-use wfc::bitset_state::BitsetState;
+use wfc::state_set::StateSet;
 use wfc::{collapse, set_rule::*};
-use wfc::{square_grid::SquareGrid, AllState};
+use wfc::{square_grid::SquareGrid, State};
 
-type S = BitsetState<11>;
-
-const A: S = S::state(0);
-const B: S = S::state(1);
-const C: S = S::state(2);
-const D: S = S::state(3);
-const E: S = S::state(4);
-const F: S = S::state(5);
-const G: S = S::state(6);
-const H: S = S::state(7);
-const I: S = S::state(8);
-const J: S = S::state(9);
-const K: S = S::state(10);
+type S = StateSet<11>;
 
 const UP: (isize, isize) = (0, -1);
 const DOWN: (isize, isize) = (0, 1);
@@ -27,7 +15,20 @@ type Grid = SquareGrid<S>;
 const WIDTH_TILES: u32 = 40;
 const HEIGHT_TILES: u32 = 40;
 
+#[allow(non_snake_case)]
 fn main() {
+    let A: S = S::state(0);
+    let B: S = S::state(1);
+    let C: S = S::state(2);
+    let D: S = S::state(3);
+    let E: S = S::state(4);
+    let F: S = S::state(5);
+    let G: S = S::state(6);
+    let H: S = S::state(7);
+    let I: S = S::state(8);
+    let J: S = S::state(9);
+    let K: S = S::state(10);
+
     //
     //  A B C J
     //  D E F K
@@ -39,23 +40,92 @@ fn main() {
     let rule = SetCollapseRuleBuilder::new(UniformSetCollapseObserver)
         .allow(
             &E,
-            &[(UP, E | B), (LEFT, E | D), (RIGHT, E | F), (DOWN, E | H)],
+            &[
+                (UP, E.clone() | B.clone()),
+                (LEFT, E.clone() | D.clone()),
+                (RIGHT, E.clone() | F.clone()),
+                (DOWN, E.clone() | H.clone()),
+            ],
         )
-        .allow(&A, &[(LEFT, C | F | I), (UP, G | H | I)])
-        .allow(&B, &[(LEFT, A | B), (RIGHT, C | B), (UP, G | H | I)])
-        .allow(&C, &[(UP, G | H | I), (RIGHT, A | D | G)])
-        .allow(&G, &[(DOWN, A | B | C), (LEFT, C | F | I)])
-        .allow(&I, &[(RIGHT, A | D | G), (DOWN, A | B | C)])
-        .allow(&H, &[(LEFT, G | H), (RIGHT, I | H), (DOWN, A | B | C)])
-        .allow(&F, &[(UP, C | F), (DOWN, I | F), (RIGHT, A | D | C)])
-        .allow(&D, &[(UP, A | D), (DOWN, G | D), (LEFT, C | F | I)])
+        .allow(
+            &A,
+            &[
+                (LEFT, C.clone() | F.clone() | I.clone()),
+                (UP, G.clone() | H.clone() | I.clone()),
+            ],
+        )
+        .allow(
+            &B,
+            &[
+                (LEFT, A.clone() | B.clone()),
+                (RIGHT, C.clone() | B.clone()),
+                (UP, G.clone() | H.clone() | I.clone()),
+            ],
+        )
+        .allow(
+            &C,
+            &[
+                (UP, G.clone() | H.clone() | I.clone()),
+                (RIGHT, A.clone() | D.clone() | G.clone()),
+            ],
+        )
+        .allow(
+            &G,
+            &[
+                (DOWN, A.clone() | B.clone() | C.clone()),
+                (LEFT, C.clone() | F.clone() | I.clone()),
+            ],
+        )
+        .allow(
+            &I,
+            &[
+                (RIGHT, A.clone() | D.clone() | G.clone()),
+                (DOWN, A.clone() | B.clone() | C.clone()),
+            ],
+        )
+        .allow(
+            &H,
+            &[
+                (LEFT, G.clone() | H.clone()),
+                (RIGHT, I.clone() | H.clone()),
+                (DOWN, A.clone() | B.clone() | C.clone()),
+            ],
+        )
+        .allow(
+            &F,
+            &[
+                (UP, C.clone() | F.clone()),
+                (DOWN, I.clone() | F.clone()),
+                (RIGHT, A.clone() | D.clone() | C.clone()),
+            ],
+        )
+        .allow(
+            &D,
+            &[
+                (UP, A.clone() | D.clone()),
+                (DOWN, G.clone() | D.clone()),
+                (LEFT, C.clone() | F.clone() | I.clone()),
+            ],
+        )
         .allow(
             &J,
             &[
-                (UP, J | G | H | I | K),
-                (DOWN, J | A | B | C | K),
-                (LEFT, J | C | F | I | K),
-                (RIGHT, J | A | D | G | K),
+                (
+                    UP,
+                    J.clone() | G.clone() | H.clone() | I.clone() | K.clone(),
+                ),
+                (
+                    DOWN,
+                    J.clone() | A.clone() | B.clone() | C.clone() | K.clone(),
+                ),
+                (
+                    LEFT,
+                    J.clone() | C.clone() | F.clone() | I.clone() | K.clone(),
+                ),
+                (
+                    RIGHT,
+                    J.clone() | A.clone() | D.clone() | G.clone() | K.clone(),
+                ),
             ],
         )
         .build();
@@ -74,48 +144,48 @@ fn main() {
             let image_start_y = y * 8;
             let tile_start_x;
             let tile_start_y;
-            match grid[(x as isize, y as isize)] {
-                A => {
+            match grid[(x as isize, y as isize)].clone() {
+                a if a == A.clone() => {
                     tile_start_x = 0;
                     tile_start_y = 0;
                 }
-                B => {
+                a if a == B.clone() => {
                     tile_start_x = 8;
                     tile_start_y = 0;
                 }
-                C => {
+                a if a == C.clone() => {
                     tile_start_x = 16;
                     tile_start_y = 0;
                 }
-                D => {
+                a if a == D.clone() => {
                     tile_start_x = 0;
                     tile_start_y = 8;
                 }
-                E => {
+                a if a == E.clone() => {
                     tile_start_x = 8;
                     tile_start_y = 8;
                 }
-                F => {
+                a if a == F.clone() => {
                     tile_start_x = 16;
                     tile_start_y = 8;
                 }
-                G => {
+                a if a == G.clone() => {
                     tile_start_x = 0;
                     tile_start_y = 16;
                 }
-                H => {
+                a if a == H.clone() => {
                     tile_start_x = 8;
                     tile_start_y = 16;
                 }
-                I => {
+                a if a == I.clone() => {
                     tile_start_x = 16;
                     tile_start_y = 16;
                 }
-                J => {
+                a if a == J.clone() => {
                     tile_start_x = 24;
                     tile_start_y = 0;
                 }
-                K => {
+                a if a == K.clone() => {
                     tile_start_x = 24;
                     tile_start_y = 8;
                 }
