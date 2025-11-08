@@ -10,7 +10,6 @@ mod collapse_rule;
 pub mod set_rule;
 mod space;
 pub mod square_grid;
-mod state;
 pub mod state_set;
 
 use std::collections::{HashSet, VecDeque};
@@ -18,9 +17,9 @@ use std::collections::{HashSet, VecDeque};
 pub use collapse_rule::*;
 use rand::{thread_rng, Rng};
 pub use space::*;
-pub use state::*;
+use state_set::StateSet;
 
-fn find_next_to_collapse<St: State, Sp: Space<St>>(
+fn find_next_to_collapse<Sp: Space>(
     unresoved_set: &mut HashSet<Sp::Coordinate>,
     lowest_entropy_set: &mut Vec<Sp::Coordinate>,
     resolved_set: &mut HashSet<Sp::Coordinate>,
@@ -51,7 +50,7 @@ fn find_next_to_collapse<St: State, Sp: Space<St>>(
 
 /// Perform the wave function collapse algorithm on a given state-space with
 /// the provided collapse rule.
-pub fn collapse<Rule: CollapseRule<St, Sp>, St: State, Sp: Space<St>>(space: &mut Sp, rule: &Rule) {
+pub fn collapse<Rule: CollapseRule<Sp>, Sp: Space>(space: &mut Sp, rule: &Rule) {
     let mut unresolved_set = HashSet::new();
     let mut resolved_set = HashSet::new();
     let mut lowest_entropy_set = Vec::new();
@@ -63,7 +62,7 @@ pub fn collapse<Rule: CollapseRule<St, Sp>, St: State, Sp: Space<St>>(space: &mu
     }
     let mut neighbors = vec![None; neighbor_directions.len()].into_boxed_slice();
     let mut neighbor_states =
-        vec![Option::<St>::None; neighbor_directions.len()].into_boxed_slice();
+        vec![Option::<StateSet>::None; neighbor_directions.len()].into_boxed_slice();
     let mut to_propogate = VecDeque::new();
 
     for coordinate in unresolved_set.iter() {
@@ -106,13 +105,13 @@ pub fn collapse<Rule: CollapseRule<St, Sp>, St: State, Sp: Space<St>>(space: &mu
     }
 }
 
-fn run_propogation<Rule: CollapseRule<St, Sp>, St: State, Sp: Space<St>>(
+fn run_propogation<Rule: CollapseRule<Sp>, Sp: Space>(
     space: &mut Sp,
     rule: &Rule,
     to_propogate: &mut VecDeque<Sp::Coordinate>,
     neighbor_directions: &[Sp::CoordinateDelta],
     neighbors: &mut [Option<Sp::Coordinate>],
-    neighbor_states: &mut [Option<St>],
+    neighbor_states: &mut [Option<StateSet>],
 ) {
     while let Some(propogating) = to_propogate.pop_front() {
         let entropy_before = space[propogating].entropy();

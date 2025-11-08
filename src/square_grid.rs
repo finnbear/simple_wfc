@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
 
-use crate::{InvertDelta, Space};
+use crate::{state_set::StateSet, InvertDelta, Space};
 
 /// Basic square grid implementing `crate::Space`
 ///
@@ -40,23 +40,23 @@ impl<T> SquareGrid<T> {
     }
 }
 
-impl<T: 'static> Index<<Self as Space<T>>::Coordinate> for SquareGrid<T> {
-    type Output = T;
+impl Index<<Self as Space>::Coordinate> for SquareGrid<StateSet> {
+    type Output = StateSet;
 
-    fn index(&self, index: <Self as Space<T>>::Coordinate) -> &Self::Output {
+    fn index(&self, index: <Self as Space>::Coordinate) -> &Self::Output {
         let (x, y) = index;
         &self.cells[(x + y * self.width) as usize]
     }
 }
 
-impl<T: 'static> IndexMut<<Self as Space<T>>::Coordinate> for SquareGrid<T> {
-    fn index_mut(&mut self, index: <Self as Space<T>>::Coordinate) -> &mut Self::Output {
+impl IndexMut<<Self as Space>::Coordinate> for SquareGrid<StateSet> {
+    fn index_mut(&mut self, index: <Self as Space>::Coordinate) -> &mut Self::Output {
         let (x, y) = index;
         &mut self.cells[(x + y * self.width) as usize]
     }
 }
 
-impl<T: 'static> Space<T> for SquareGrid<T> {
+impl Space for SquareGrid<StateSet> {
     type Coordinate = (isize, isize);
     type CoordinateDelta = (isize, isize);
 

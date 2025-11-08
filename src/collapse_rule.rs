@@ -1,4 +1,4 @@
-use crate::{Space, State};
+use crate::{state_set::StateSet, Space};
 
 /// Collapse rules define the relationships between a cell's possible state
 /// based on it's neighbors.
@@ -8,7 +8,7 @@ use crate::{Space, State};
 /// possible states that a cell can take on. With addative rules, runtime
 /// can be unbounded, the algorithm may (randomly) never converge on a
 /// solution.
-pub trait CollapseRule<S: State, Sp: 'static + Space<S>> {
+pub trait CollapseRule<Sp: 'static + Space> {
     /// Neighbor directions are specified as a list of coordinate deltas.
     fn neighbor_offsets(&self) -> Box<[Sp::CoordinateDelta]>;
     /// The collapse rule, which modifies the possible states of 'cell' based
@@ -18,10 +18,10 @@ pub trait CollapseRule<S: State, Sp: 'static + Space<S>> {
     /// * `neighbors` - The states of neighbors in the order specified by
     /// `NEIGHBOR_DIRECTIONS`. `Some(<state>)` if the cell exists, and `None`
     /// otherwise.
-    fn collapse(&self, cell: &mut S, neighbors: &[Option<S>]);
+    fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]);
     /// The observe rule, which forces a cell into a zero-entropy state.
     ///
     /// * `cell` - The cell to observe
     /// * `neighbors` - The states of neighbor cells as in `collapse()` above.
-    fn observe(&self, cell: &mut S, neighbors: &[Option<S>]);
+    fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]);
 }

@@ -1,9 +1,9 @@
 use image::{ColorType, ImageFormat, RgbImage};
+use wfc::square_grid::SquareGrid;
 use wfc::state_set::StateSet;
 use wfc::{collapse, set_rule::*};
-use wfc::{square_grid::SquareGrid, State};
 
-type S = StateSet<11>;
+type S = StateSet;
 
 const UP: (isize, isize) = (0, -1);
 const DOWN: (isize, isize) = (0, 1);

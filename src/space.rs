@@ -1,5 +1,7 @@
 use std::{hash::Hash, ops::IndexMut};
 
+use crate::state_set::StateSet;
+
 /// Represents coordinate deltas which have an inverse - the delta which undoes
 /// the change represented by this delta.
 ///
@@ -21,7 +23,7 @@ pub trait InvertDelta {
 /// - `CoordinateDelta` represents adjacency relations between cells. In
 /// general, a collapse rule supplies a list of coordinate deltas to get
 /// neighbor cell coordinates.
-pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
+pub trait Space: IndexMut<Self::Coordinate, Output = StateSet> + 'static {
     /// Coordinates for cells in the space
     type Coordinate: Copy + Hash + Ord;
     /// Spatial relationship between cells for accessing neighbors

@@ -1,5 +1,5 @@
-use wfc::bitset_state::StateSet;
 use wfc::square_grid::SquareGrid;
+use wfc::state_set::StateSet;
 use wfc::{collapse, set_rule::*, AllState};
 
 type S = StateSet<3>;
