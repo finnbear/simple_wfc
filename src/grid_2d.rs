@@ -53,11 +53,11 @@ impl<T> Grid2d<T> {
     /// * `height` - height of the grid
     /// * `init_fn` - callback to set the initial state of each cell based on
     /// coordinate
-    pub fn new(width: u32, height: u32, init_fn: impl Fn(u32, u32) -> T) -> Self {
+    pub fn new(width: u32, height: u32, init_fn: impl Fn(Coordinate2d) -> T) -> Self {
         let mut cells = Vec::with_capacity((width * height) as usize);
         for y in 0..height {
             for x in 0..width {
-                cells.push(init_fn(x, y));
+                cells.push(init_fn(Coordinate2d { x, y }));
             }
         }
         Self {

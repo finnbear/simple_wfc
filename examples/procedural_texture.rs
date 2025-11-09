@@ -124,7 +124,7 @@ fn main() {
             ],
         )
         .build();
-    let mut grid = Grid::new(WIDTH_TILES as u32, HEIGHT_TILES as u32, |_, _| S::all());
+    let mut grid = Grid::new(WIDTH_TILES as u32, HEIGHT_TILES as u32, |_| S::all());
     collapse(&mut grid, &rule);
 
     let image_bytes = include_bytes!("pattern.png");
