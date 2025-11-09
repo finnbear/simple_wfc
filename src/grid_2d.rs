@@ -86,9 +86,9 @@ impl IndexMut<<Self as Space>::Coordinate> for Grid2d<StateSet> {
 
 impl Space for Grid2d<StateSet> {
     type Coordinate = Coordinate2d;
-    type CoordinateDelta = Direction2d;
+    type Direction = Direction2d;
 
-    const DIRECTIONS: &'static [Self::CoordinateDelta] = &[
+    const DIRECTIONS: &'static [Self::Direction] = &[
         Direction2d::Right,
         Direction2d::Up,
         Direction2d::Left,
@@ -103,22 +103,22 @@ impl Space for Grid2d<StateSet> {
         }
     }
 
-    fn neighbors(&self, coord: Self::Coordinate, neighbors: &mut [Option<Self::Coordinate>]) {
-        assert!(Self::DIRECTIONS.len() <= neighbors.len());
-
+    fn neighbor(
+        &self,
+        coord: Self::Coordinate,
+        direction: Self::Direction,
+    ) -> Option<Self::Coordinate> {
         let Coordinate2d { x, y } = coord;
-        for i in 0..Self::DIRECTIONS.len() {
-            let (dx, dy) = Self::DIRECTIONS[i].offset();
-            neighbors[i] = if (x == 0 && dx == -1) || (y == 0 && dy == -1) {
-                None
-            } else if (x == self.width - 1 && dx == 1) || (y == self.height - 1 && dy == 1) {
-                None
-            } else {
-                Some(Coordinate2d {
-                    x: x.wrapping_add_signed(dx),
-                    y: y.wrapping_add_signed(dy),
-                })
-            };
+        let (dx, dy) = direction.offset();
+        if (x == 0 && dx == -1) || (y == 0 && dy == -1) {
+            None
+        } else if (x == self.width - 1 && dx == 1) || (y == self.height - 1 && dy == 1) {
+            None
+        } else {
+            Some(Coordinate2d {
+                x: x.wrapping_add_signed(dx),
+                y: y.wrapping_add_signed(dy),
+            })
         }
     }
 }

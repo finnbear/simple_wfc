@@ -56,7 +56,7 @@ pub struct SetCollapseRuleBuilder<Sp: Space, O: SetCollapseObserver + Clone> {
 
 impl<Sp: Space, O: SetCollapseObserver + Clone> SetCollapseRuleBuilder<Sp, O>
 where
-    Sp::CoordinateDelta: Eq + Clone + InvertDelta,
+    Sp::Direction: Eq + Clone + InvertDelta,
 {
     pub fn new(observer: O) -> Self {
         Self {
@@ -74,7 +74,7 @@ where
     ///
     /// States which do not have any allowed neighbors for a given coordinate
     /// delta will require that those coordinates are outside of world-space.
-    pub fn allow(mut self, state: State, neighbors: &[(Sp::CoordinateDelta, StateSet)]) -> Self {
+    pub fn allow(mut self, state: State, neighbors: &[(Sp::Direction, StateSet)]) -> Self {
         for (delta, neighbor) in neighbors {
             let mut neighbor_states = Vec::new();
             neighbor.collect_final_states(&mut neighbor_states);
@@ -85,14 +85,14 @@ where
         self
     }
 
-    fn allow_symmetric(&mut self, a: State, b: State, offset: &Sp::CoordinateDelta) {
+    fn allow_symmetric(&mut self, a: State, b: State, offset: &Sp::Direction) {
         let offset_index = self.get_offset_index(offset.clone());
         self.get_rule(a).add_allowed(offset_index, b);
         let offset_index = self.get_offset_index(offset.invert_delta());
         self.get_rule(b).add_allowed(offset_index, a);
     }
 
-    fn get_offset_index(&mut self, offset: Sp::CoordinateDelta) -> usize {
+    fn get_offset_index(&mut self, offset: Sp::Direction) -> usize {
         for i in 0..Sp::DIRECTIONS.len() {
             if Sp::DIRECTIONS[i] == offset {
                 return i;

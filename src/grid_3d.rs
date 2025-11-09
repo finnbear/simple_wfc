@@ -92,9 +92,9 @@ impl IndexMut<<Self as Space>::Coordinate> for Grid3d<StateSet> {
 
 impl Space for Grid3d<StateSet> {
     type Coordinate = Coordinate3d;
-    type CoordinateDelta = Direction3d;
+    type Direction = Direction3d;
 
-    const DIRECTIONS: &'static [Self::CoordinateDelta] = &[
+    const DIRECTIONS: &'static [Self::Direction] = &[
         Direction3d::PosX,
         Direction3d::NegX,
         Direction3d::PosY,
@@ -113,26 +113,26 @@ impl Space for Grid3d<StateSet> {
         }
     }
 
-    fn neighbors(&self, coord: Self::Coordinate, neighbors: &mut [Option<Self::Coordinate>]) {
-        assert!(Self::DIRECTIONS.len() <= neighbors.len());
-
+    fn neighbor(
+        &self,
+        coord: Self::Coordinate,
+        direction: Self::Direction,
+    ) -> Option<Self::Coordinate> {
         let Coordinate3d { x, y, z } = coord;
-        for i in 0..Self::DIRECTIONS.len() {
-            let (dx, dy, dz) = Self::DIRECTIONS[i].offset();
-            neighbors[i] = if (x == 0 && dx == -1) || (y == 0 && dy == -1) || (z == 0 && dz == -1) {
-                None
-            } else if (x == self.width - 1 && dx == 1)
-                || (y == self.height - 1 && dy == 1)
-                || (z == self.depth - 1 && dz == 1)
-            {
-                None
-            } else {
-                Some(Coordinate3d {
-                    x: x.wrapping_add_signed(dx),
-                    y: y.wrapping_add_signed(dy),
-                    z: z.wrapping_add_signed(dz),
-                })
-            };
+        let (dx, dy, dz) = direction.offset();
+        if (x == 0 && dx == -1) || (y == 0 && dy == -1) || (z == 0 && dz == -1) {
+            None
+        } else if (x == self.width - 1 && dx == 1)
+            || (y == self.height - 1 && dy == 1)
+            || (z == self.depth - 1 && dz == 1)
+        {
+            None
+        } else {
+            Some(Coordinate3d {
+                x: x.wrapping_add_signed(dx),
+                y: y.wrapping_add_signed(dy),
+                z: z.wrapping_add_signed(dz),
+            })
         }
     }
 }

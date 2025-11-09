@@ -81,7 +81,7 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
         space,
     ) {
         to_propogate.clear();
-        space.neighbors(to_collapse, &mut neighbors);
+        fill_neighbors(&*space, to_collapse, &mut neighbors);
         for i in 0..Sp::DIRECTIONS.len() {
             neighbor_states[i] = neighbors[i].map(|coord| space[coord].clone());
         }
@@ -101,6 +101,16 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
     }
 }
 
+fn fill_neighbors<Sp: Space>(
+    space: &Sp,
+    coord: Sp::Coordinate,
+    directions: &mut [Option<Sp::Coordinate>],
+) {
+    for (i, direction) in Sp::DIRECTIONS.iter().enumerate() {
+        directions[i] = space.neighbor(coord, *direction);
+    }
+}
+
 fn run_propogation<Sp: Space, O: SetCollapseObserver>(
     space: &mut Sp,
     rule: &SetCollapseRule<O>,
@@ -112,7 +122,7 @@ fn run_propogation<Sp: Space, O: SetCollapseObserver>(
         let entropy_before = space[propogating].entropy();
 
         if entropy_before != 0 {
-            space.neighbors(propogating, neighbors);
+            fill_neighbors(&*space, propogating, neighbors);
             for i in 0..Sp::DIRECTIONS.len() {
                 neighbor_states[i] = neighbors[i].map(|coord| space[coord].clone());
             }

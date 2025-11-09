@@ -26,17 +26,16 @@ pub trait Space: IndexMut<Self::Coordinate, Output = StateSet> + 'static {
     /// Coordinates for cells in the space
     type Coordinate: Copy + Hash + Ord;
     /// Spatial relationship between cells for accessing neighbors
-    type CoordinateDelta: Copy + Debug + 'static;
+    type Direction: Copy + Debug + 'static;
 
-    const DIRECTIONS: &'static [Self::CoordinateDelta];
+    const DIRECTIONS: &'static [Self::Direction];
 
     /// Get every valid coordinate in the space.
     fn visit_coordinates(&self, visitor: impl FnMut(Self::Coordinate));
-    /// Get the neighbor coordinates of a given cell based on a list of deltas.
-    ///
-    /// * `coord` - Coordinate of the cell to find neighbors for
-    /// * `neighbors` - Output list of neighbor coordinates. Must be at least
-    /// as long as `Self::NEIGHBORS`. Set to `None` for neighbors which are
-    /// out of bounds for the space.
-    fn neighbors(&self, coord: Self::Coordinate, neighbors: &mut [Option<Self::Coordinate>]);
+    /// Get the neighbor coordinates of a given cell based on a direction.
+    fn neighbor(
+        &self,
+        coord: Self::Coordinate,
+        direction: Self::Direction,
+    ) -> Option<Self::Coordinate>;
 }

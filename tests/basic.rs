@@ -24,7 +24,7 @@ type TestGrid = Grid2d<PossibleStates>;
 struct Rule;
 
 impl CollapseRule<PossibleStates, TestGrid> for Rule {
-    fn neighbor_offsets(&self) -> Box<[<TestGrid as Space<PossibleStates>>::CoordinateDelta]> {
+    fn neighbor_offsets(&self) -> Box<[<TestGrid as Space<PossibleStates>>::Direction]> {
         vec![(-1, 0), (1, 0)].into_boxed_slice()
     }
 
