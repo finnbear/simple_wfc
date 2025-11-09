@@ -1,6 +1,6 @@
 use crate::{
     state::{State, StateSet},
-    CollapseRule, InvertDelta, Space,
+    InvertDelta, Space,
 };
 use rand::{thread_rng, Rng};
 
@@ -145,16 +145,15 @@ where
     }
 }
 
-/// A collapse rule implementation that works with implementors of [crate::SetState]
-impl<Sp: Space, O: SetCollapseObserver> CollapseRule<Sp> for SetCollapseRule<Sp, O>
+impl<Sp: Space, O: SetCollapseObserver> SetCollapseRule<Sp, O>
 where
     Sp::CoordinateDelta: Clone,
 {
-    fn neighbor_offsets(&self) -> Box<[<Sp as Space>::CoordinateDelta]> {
+    pub fn neighbor_offsets(&self) -> Box<[<Sp as Space>::CoordinateDelta]> {
         self.neighbor_offsets.clone()
     }
 
-    fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
+    pub fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
         for (state, allowed_neighbors) in &self.state_rules[..] {
             if cell.has(*state) {
                 for i in 0..neighbors.len() {
@@ -173,7 +172,7 @@ where
         }
     }
 
-    fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
+    pub fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
         self.observer.observe(cell, neighbors);
     }
 }

@@ -6,18 +6,16 @@
 //! cells (such as a square grid) from all possible states to only the states
 //! possible with a given ruleset, selecting randomly where ambiguous.
 
-mod collapse_rule;
 pub mod set_rule;
 mod space;
 pub mod square_grid;
 pub mod state;
 
-use std::collections::{HashSet, VecDeque};
-
-pub use collapse_rule::*;
 use rand::{thread_rng, Rng};
+use set_rule::{SetCollapseObserver, SetCollapseRule};
 pub use space::*;
 use state::StateSet;
+use std::collections::{HashSet, VecDeque};
 
 fn find_next_to_collapse<Sp: Space>(
     unresoved_set: &mut HashSet<Sp::Coordinate>,
@@ -50,7 +48,7 @@ fn find_next_to_collapse<Sp: Space>(
 
 /// Perform the wave function collapse algorithm on a given state-space with
 /// the provided collapse rule.
-pub fn collapse<Rule: CollapseRule<Sp>, Sp: Space>(space: &mut Sp, rule: &Rule) {
+pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCollapseRule<Sp, O>) {
     let mut unresolved_set = HashSet::new();
     let mut resolved_set = HashSet::new();
     let mut lowest_entropy_set = Vec::new();
@@ -105,9 +103,9 @@ pub fn collapse<Rule: CollapseRule<Sp>, Sp: Space>(space: &mut Sp, rule: &Rule) 
     }
 }
 
-fn run_propogation<Rule: CollapseRule<Sp>, Sp: Space>(
+fn run_propogation<Sp: Space, O: SetCollapseObserver>(
     space: &mut Sp,
-    rule: &Rule,
+    rule: &SetCollapseRule<Sp, O>,
     to_propogate: &mut VecDeque<Sp::Coordinate>,
     neighbor_directions: &[Sp::CoordinateDelta],
     neighbors: &mut [Option<Sp::Coordinate>],
