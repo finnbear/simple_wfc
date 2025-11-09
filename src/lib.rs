@@ -52,15 +52,14 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
     let mut unresolved_set = HashSet::new();
     let mut resolved_set = HashSet::new();
     let mut lowest_entropy_set = Vec::new();
-    let neighbor_directions = Sp::NEIGHBORS;
     space.visit_coordinates(|coord| {
         if space[coord].entropy() > 0 {
             unresolved_set.insert(coord);
         }
     });
-    let mut neighbors = vec![None; neighbor_directions.len()].into_boxed_slice();
+    let mut neighbors = vec![None; Sp::NEIGHBORS.len()].into_boxed_slice();
     let mut neighbor_states =
-        vec![Option::<StateSet>::None; neighbor_directions.len()].into_boxed_slice();
+        vec![Option::<StateSet>::None; Sp::NEIGHBORS.len()].into_boxed_slice();
     let mut to_propogate = VecDeque::new();
 
     for coordinate in unresolved_set.iter() {
@@ -70,7 +69,6 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
         space,
         rule,
         &mut to_propogate,
-        &neighbor_directions,
         &mut neighbors,
         &mut neighbor_states,
     );
@@ -82,12 +80,12 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
         space,
     ) {
         to_propogate.clear();
-        space.neighbors(to_collapse, &neighbor_directions, &mut neighbors);
-        for i in 0..neighbor_directions.len() {
+        space.neighbors(to_collapse, &mut neighbors);
+        for i in 0..Sp::NEIGHBORS.len() {
             neighbor_states[i] = neighbors[i].map(|coord| space[coord].clone());
         }
         rule.observe(&mut space[to_collapse], &neighbor_states[..]);
-        for i in 0..neighbor_directions.len() {
+        for i in 0..Sp::NEIGHBORS.len() {
             if let Some(neighbor_coord) = neighbors[i] {
                 to_propogate.push_back(neighbor_coord);
             }
@@ -96,7 +94,6 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
             space,
             rule,
             &mut to_propogate,
-            &neighbor_directions,
             &mut neighbors,
             &mut neighbor_states,
         );
@@ -107,7 +104,6 @@ fn run_propogation<Sp: Space, O: SetCollapseObserver>(
     space: &mut Sp,
     rule: &SetCollapseRule<O>,
     to_propogate: &mut VecDeque<Sp::Coordinate>,
-    neighbor_directions: &[Sp::CoordinateDelta],
     neighbors: &mut [Option<Sp::Coordinate>],
     neighbor_states: &mut [Option<StateSet>],
 ) {
@@ -115,15 +111,15 @@ fn run_propogation<Sp: Space, O: SetCollapseObserver>(
         let entropy_before = space[propogating].entropy();
 
         if entropy_before != 0 {
-            space.neighbors(propogating, neighbor_directions, neighbors);
-            for i in 0..neighbor_directions.len() {
+            space.neighbors(propogating, neighbors);
+            for i in 0..Sp::NEIGHBORS.len() {
                 neighbor_states[i] = neighbors[i].map(|coord| space[coord].clone());
             }
             rule.collapse(&mut space[propogating], neighbor_states);
             let entropy_after = space[propogating].entropy();
 
             if entropy_after < entropy_before {
-                for i in 0..neighbor_directions.len() {
+                for i in 0..Sp::NEIGHBORS.len() {
                     if let Some(neighbor) = neighbors[i] {
                         if space[neighbor].entropy() != 0 {
                             to_propogate.push_back(neighbor);

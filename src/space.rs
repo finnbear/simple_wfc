@@ -35,14 +35,8 @@ pub trait Space: IndexMut<Self::Coordinate, Output = StateSet> + 'static {
     /// Get the neighbor coordinates of a given cell based on a list of deltas.
     ///
     /// * `coord` - Coordinate of the cell to find neighbors for
-    /// * `neighbor_directions` - List of neighbor cell offsets
     /// * `neighbors` - Output list of neighbor coordinates. Must be at least
-    /// as long as `neighbor_directions`. Set to `None` for neighbors which are
+    /// as long as `Self::NEIGHBORS`. Set to `None` for neighbors which are
     /// out of bounds for the space.
-    fn neighbors(
-        &self,
-        coord: Self::Coordinate,
-        neighbor_directions: &[Self::CoordinateDelta],
-        neighbors: &mut [Option<Self::Coordinate>],
-    );
+    fn neighbors(&self, coord: Self::Coordinate, neighbors: &mut [Option<Self::Coordinate>]);
 }

@@ -6,14 +6,37 @@ use std::ops::{Index, IndexMut};
 /// coordinates and coordinate directions are specified as `(isize, isize)`.
 pub struct SquareGrid<T> {
     cells: Box<[T]>,
-    width: isize,
-    height: isize,
+    width: u32,
+    height: u32,
 }
 
-impl InvertDelta for (isize, isize) {
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Delta2d {
+    Right,
+    Up,
+    Left,
+    Down,
+}
+
+impl Delta2d {
+    pub fn offset(self) -> (i32, i32) {
+        match self {
+            Self::Right => (1, 0),
+            Self::Up => (0, 1),
+            Self::Left => (-1, 0),
+            Self::Down => (0, -1),
+        }
+    }
+}
+
+impl InvertDelta for Delta2d {
     fn invert_delta(&self) -> Self {
-        let (dx, dy) = *self;
-        (-dx, -dy)
+        match self {
+            Self::Left => Self::Right,
+            Self::Up => Self::Down,
+            Self::Right => Self::Left,
+            Self::Down => Self::Up,
+        }
     }
 }
 
@@ -24,7 +47,7 @@ impl<T> SquareGrid<T> {
     /// * `height` - height of the grid
     /// * `init_fn` - callback to set the initial state of each cell based on
     /// coordinate
-    pub fn new(width: isize, height: isize, init_fn: impl Fn(isize, isize) -> T) -> Self {
+    pub fn new(width: u32, height: u32, init_fn: impl Fn(u32, u32) -> T) -> Self {
         let mut cells = Vec::new();
         for y in 0..height {
             for x in 0..width {
@@ -56,10 +79,11 @@ impl IndexMut<<Self as Space>::Coordinate> for SquareGrid<StateSet> {
 }
 
 impl Space for SquareGrid<StateSet> {
-    type Coordinate = (isize, isize);
-    type CoordinateDelta = (isize, isize);
+    type Coordinate = (u32, u32);
+    type CoordinateDelta = Delta2d;
 
-    const NEIGHBORS: &'static [Self::CoordinateDelta] = &[(1, 0), (0, 1), (-1, 0), (0, -1)];
+    const NEIGHBORS: &'static [Self::CoordinateDelta] =
+        &[Delta2d::Left, Delta2d::Right, Delta2d::Up, Delta2d::Down];
 
     fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
         for y in 0..self.height {
@@ -69,23 +93,19 @@ impl Space for SquareGrid<StateSet> {
         }
     }
 
-    fn neighbors(
-        &self,
-        coord: Self::Coordinate,
-        neighbor_directions: &[Self::CoordinateDelta],
-        neighbors: &mut [Option<Self::Coordinate>],
-    ) {
-        assert!(neighbor_directions.len() <= neighbors.len());
+    fn neighbors(&self, coord: Self::Coordinate, neighbors: &mut [Option<Self::Coordinate>]) {
+        assert!(Self::NEIGHBORS.len() <= neighbors.len());
 
         let (x, y) = coord;
-        for i in 0..neighbor_directions.len() {
-            let (dx, dy) = neighbor_directions[i];
-            let (nx, ny) = (x + dx, y + dy);
-            if nx.clamp(0, self.width - 1) == nx && ny.clamp(0, self.height - 1) == ny {
-                neighbors[i] = Some((nx, ny));
+        for i in 0..Self::NEIGHBORS.len() {
+            let (dx, dy) = Self::NEIGHBORS[i].offset();
+            neighbors[i] = if (x == 0 && dx == -1) || (y == 0 && dy == -1) {
+                None
+            } else if (x == self.width - 1) || (y == self.height - 1) {
+                None
             } else {
-                neighbors[i] = None;
-            }
+                Some((x.wrapping_add_signed(dx), y.wrapping_add_signed(dy)))
+            };
         }
     }
 }

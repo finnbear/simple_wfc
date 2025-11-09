@@ -1,14 +1,9 @@
 use image::{ColorType, ImageFormat, RgbImage};
-use wfc::square_grid::SquareGrid;
+use wfc::square_grid::{Delta2d, SquareGrid};
 use wfc::state::{State, StateSet};
 use wfc::{collapse, set_rule::*};
 
 type S = StateSet;
-
-const UP: (isize, isize) = (0, -1);
-const DOWN: (isize, isize) = (0, 1);
-const LEFT: (isize, isize) = (-1, 0);
-const RIGHT: (isize, isize) = (1, 0);
 
 type Grid = SquareGrid<S>;
 
@@ -41,95 +36,95 @@ fn main() {
         .allow(
             E,
             &[
-                (UP, E.clone() | B.clone()),
-                (LEFT, E.clone() | D.clone()),
-                (RIGHT, E.clone() | F.clone()),
-                (DOWN, E.clone() | H.clone()),
+                (Delta2d::Up, E.clone() | B.clone()),
+                (Delta2d::Left, E.clone() | D.clone()),
+                (Delta2d::Right, E.clone() | F.clone()),
+                (Delta2d::Down, E.clone() | H.clone()),
             ],
         )
         .allow(
             A,
             &[
-                (LEFT, C.clone() | F.clone() | I.clone()),
-                (UP, G.clone() | H.clone() | I.clone()),
+                (Delta2d::Left, C.clone() | F.clone() | I.clone()),
+                (Delta2d::Up, G.clone() | H.clone() | I.clone()),
             ],
         )
         .allow(
             B,
             &[
-                (LEFT, A.clone() | B.clone()),
-                (RIGHT, C.clone() | B.clone()),
-                (UP, G.clone() | H.clone() | I.clone()),
+                (Delta2d::Left, A.clone() | B.clone()),
+                (Delta2d::Right, C.clone() | B.clone()),
+                (Delta2d::Up, G.clone() | H.clone() | I.clone()),
             ],
         )
         .allow(
             C,
             &[
-                (UP, G.clone() | H.clone() | I.clone()),
-                (RIGHT, A.clone() | D.clone() | G.clone()),
+                (Delta2d::Up, G.clone() | H.clone() | I.clone()),
+                (Delta2d::Right, A.clone() | D.clone() | G.clone()),
             ],
         )
         .allow(
             G,
             &[
-                (DOWN, A.clone() | B.clone() | C.clone()),
-                (LEFT, C.clone() | F.clone() | I.clone()),
+                (Delta2d::Down, A.clone() | B.clone() | C.clone()),
+                (Delta2d::Left, C.clone() | F.clone() | I.clone()),
             ],
         )
         .allow(
             I,
             &[
-                (RIGHT, A.clone() | D.clone() | G.clone()),
-                (DOWN, A.clone() | B.clone() | C.clone()),
+                (Delta2d::Right, A.clone() | D.clone() | G.clone()),
+                (Delta2d::Down, A.clone() | B.clone() | C.clone()),
             ],
         )
         .allow(
             H,
             &[
-                (LEFT, G.clone() | H.clone()),
-                (RIGHT, I.clone() | H.clone()),
-                (DOWN, A.clone() | B.clone() | C.clone()),
+                (Delta2d::Left, G.clone() | H.clone()),
+                (Delta2d::Right, I.clone() | H.clone()),
+                (Delta2d::Down, A.clone() | B.clone() | C.clone()),
             ],
         )
         .allow(
             F,
             &[
-                (UP, C.clone() | F.clone()),
-                (DOWN, I.clone() | F.clone()),
-                (RIGHT, A.clone() | D.clone() | C.clone()),
+                (Delta2d::Up, C.clone() | F.clone()),
+                (Delta2d::Down, I.clone() | F.clone()),
+                (Delta2d::Right, A.clone() | D.clone() | C.clone()),
             ],
         )
         .allow(
             D,
             &[
-                (UP, A.clone() | D.clone()),
-                (DOWN, G.clone() | D.clone()),
-                (LEFT, C.clone() | F.clone() | I.clone()),
+                (Delta2d::Up, A.clone() | D.clone()),
+                (Delta2d::Down, G.clone() | D.clone()),
+                (Delta2d::Left, C.clone() | F.clone() | I.clone()),
             ],
         )
         .allow(
             J,
             &[
                 (
-                    UP,
+                    Delta2d::Up,
                     J.clone() | G.clone() | H.clone() | I.clone() | K.clone(),
                 ),
                 (
-                    DOWN,
+                    Delta2d::Down,
                     J.clone() | A.clone() | B.clone() | C.clone() | K.clone(),
                 ),
                 (
-                    LEFT,
+                    Delta2d::Left,
                     J.clone() | C.clone() | F.clone() | I.clone() | K.clone(),
                 ),
                 (
-                    RIGHT,
+                    Delta2d::Right,
                     J.clone() | A.clone() | D.clone() | G.clone() | K.clone(),
                 ),
             ],
         )
         .build();
-    let mut grid = Grid::new(WIDTH_TILES as isize, HEIGHT_TILES as isize, |_, _| S::all());
+    let mut grid = Grid::new(WIDTH_TILES as u32, HEIGHT_TILES as u32, |_, _| S::all());
     collapse(&mut grid, &rule);
 
     let image_bytes = include_bytes!("pattern.png");
@@ -144,7 +139,7 @@ fn main() {
             let image_start_y = y * 8;
             let tile_start_x;
             let tile_start_y;
-            match grid[(x as isize, y as isize)].clone() {
+            match grid[(x as u32, y as u32)].clone() {
                 a if a.has(A) => {
                     tile_start_x = 0;
                     tile_start_y = 0;
