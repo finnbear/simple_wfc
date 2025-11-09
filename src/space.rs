@@ -1,5 +1,5 @@
 use crate::state::StateSet;
-use std::{hash::Hash, ops::IndexMut};
+use std::{fmt::Debug, hash::Hash, ops::IndexMut};
 
 /// Represents coordinate deltas which have an inverse - the delta which undoes
 /// the change represented by this delta.
@@ -26,7 +26,9 @@ pub trait Space: IndexMut<Self::Coordinate, Output = StateSet> + 'static {
     /// Coordinates for cells in the space
     type Coordinate: Copy + Hash + Ord;
     /// Spatial relationship between cells for accessing neighbors
-    type CoordinateDelta: Copy + 'static;
+    type CoordinateDelta: Copy + Debug + 'static;
+
+    const NEIGHBORS: &'static [Self::CoordinateDelta];
 
     /// Get every valid coordinate in the space.
     fn visit_coordinates(&self, visitor: impl FnMut(Self::Coordinate));

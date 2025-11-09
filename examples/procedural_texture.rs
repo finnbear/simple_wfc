@@ -37,7 +37,7 @@ fn main() {
     //
     // A-I form a 9-quadrant for rectangles, J is open space around them, and K can touch only J
 
-    let rule = SetCollapseRuleBuilder::new(UniformSetCollapseObserver)
+    let rule = SetCollapseRuleBuilder::<SquareGrid<StateSet>, _>::new(UniformSetCollapseObserver)
         .allow(
             E,
             &[

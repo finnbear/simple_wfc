@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::{
     state::{State, StateSet},
     InvertDelta, Space,
@@ -20,8 +22,7 @@ impl SetCollapseObserver for UniformSetCollapseObserver {
     }
 }
 
-pub struct SetCollapseRule<Sp: Space, O: SetCollapseObserver> {
-    neighbor_offsets: Box<[Sp::CoordinateDelta]>,
+pub struct SetCollapseRule<O: SetCollapseObserver> {
     state_rules: Box<[(State, Box<[Option<StateSet>]>)]>,
     observer: O,
 }
@@ -48,9 +49,9 @@ impl StateRule {
 ///
 /// Automatically collects used coordinate deltas and manages creating symmetric rules from asymmetric definitions
 pub struct SetCollapseRuleBuilder<Sp: Space, O: SetCollapseObserver + Clone> {
-    neighbor_offsets: Vec<Sp::CoordinateDelta>,
     state_rules: Vec<StateRule>,
     observer: O,
+    _spooky: PhantomData<Sp>,
 }
 
 impl<Sp: Space, O: SetCollapseObserver + Clone> SetCollapseRuleBuilder<Sp, O>
@@ -59,9 +60,9 @@ where
 {
     pub fn new(observer: O) -> Self {
         Self {
-            neighbor_offsets: Vec::new(),
             state_rules: Vec::new(),
             observer,
+            _spooky: PhantomData,
         }
     }
 
@@ -92,14 +93,12 @@ where
     }
 
     fn get_offset_index(&mut self, offset: Sp::CoordinateDelta) -> usize {
-        for i in 0..self.neighbor_offsets.len() {
-            if self.neighbor_offsets[i] == offset {
+        for i in 0..Sp::NEIGHBORS.len() {
+            if Sp::NEIGHBORS[i] == offset {
                 return i;
             }
         }
-        let i = self.neighbor_offsets.len();
-        self.neighbor_offsets.push(offset);
-        i
+        panic!("invalid neighbor at {offset:?}");
     }
 
     fn get_rule(&mut self, state: State) -> &mut StateRule {
@@ -116,11 +115,11 @@ where
         &mut self.state_rules[index]
     }
 
-    pub fn build(self) -> SetCollapseRule<Sp, O> {
+    pub fn build(self) -> SetCollapseRule<O> {
         let mut state_rules = Vec::new();
         let mut remaining_state = StateSet::all();
         for mut proto_rule in self.state_rules {
-            while proto_rule.allowed_neighbors.len() < self.neighbor_offsets.len() {
+            while proto_rule.allowed_neighbors.len() < Sp::NEIGHBORS.len() {
                 proto_rule.allowed_neighbors.push(None);
             }
             remaining_state.remove(proto_rule.state);
@@ -134,25 +133,17 @@ where
         for remaining_state in remaining_states {
             state_rules.push((
                 remaining_state,
-                vec![None; self.neighbor_offsets.len()].into_boxed_slice(),
+                vec![None; Sp::NEIGHBORS.len()].into_boxed_slice(),
             ));
         }
         SetCollapseRule {
-            neighbor_offsets: self.neighbor_offsets.into_boxed_slice(),
             state_rules: state_rules.into_boxed_slice(),
             observer: self.observer,
         }
     }
 }
 
-impl<Sp: Space, O: SetCollapseObserver> SetCollapseRule<Sp, O>
-where
-    Sp::CoordinateDelta: Clone,
-{
-    pub fn neighbor_offsets(&self) -> Box<[<Sp as Space>::CoordinateDelta]> {
-        self.neighbor_offsets.clone()
-    }
-
+impl<O: SetCollapseObserver> SetCollapseRule<O> {
     pub fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
         for (state, allowed_neighbors) in &self.state_rules[..] {
             if cell.has(*state) {

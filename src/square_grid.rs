@@ -59,6 +59,8 @@ impl Space for SquareGrid<StateSet> {
     type Coordinate = (isize, isize);
     type CoordinateDelta = (isize, isize);
 
+    const NEIGHBORS: &'static [Self::CoordinateDelta] = &[(1, 0), (0, 1), (-1, 0), (0, -1)];
+
     fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
         for y in 0..self.height {
             for x in 0..self.width {

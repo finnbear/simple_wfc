@@ -48,11 +48,11 @@ fn find_next_to_collapse<Sp: Space>(
 
 /// Perform the wave function collapse algorithm on a given state-space with
 /// the provided collapse rule.
-pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCollapseRule<Sp, O>) {
+pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCollapseRule<O>) {
     let mut unresolved_set = HashSet::new();
     let mut resolved_set = HashSet::new();
     let mut lowest_entropy_set = Vec::new();
-    let neighbor_directions = rule.neighbor_offsets();
+    let neighbor_directions = Sp::NEIGHBORS;
     space.visit_coordinates(|coord| {
         if space[coord].entropy() > 0 {
             unresolved_set.insert(coord);
@@ -105,7 +105,7 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
 
 fn run_propogation<Sp: Space, O: SetCollapseObserver>(
     space: &mut Sp,
-    rule: &SetCollapseRule<Sp, O>,
+    rule: &SetCollapseRule<O>,
     to_propogate: &mut VecDeque<Sp::Coordinate>,
     neighbor_directions: &[Sp::CoordinateDelta],
     neighbors: &mut [Option<Sp::Coordinate>],
