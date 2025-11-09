@@ -83,7 +83,7 @@ impl Space for SquareGrid<StateSet> {
     type CoordinateDelta = Delta2d;
 
     const NEIGHBORS: &'static [Self::CoordinateDelta] =
-        &[Delta2d::Left, Delta2d::Right, Delta2d::Up, Delta2d::Down];
+        &[Delta2d::Right, Delta2d::Up, Delta2d::Left, Delta2d::Down];
 
     fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
         for y in 0..self.height {
@@ -101,7 +101,7 @@ impl Space for SquareGrid<StateSet> {
             let (dx, dy) = Self::NEIGHBORS[i].offset();
             neighbors[i] = if (x == 0 && dx == -1) || (y == 0 && dy == -1) {
                 None
-            } else if (x == self.width - 1) || (y == self.height - 1) {
+            } else if (x == self.width - 1 && dx == 1) || (y == self.height - 1 && dy == 1) {
                 None
             } else {
                 Some((x.wrapping_add_signed(dx), y.wrapping_add_signed(dy)))

@@ -36,17 +36,17 @@ fn main() {
         .allow(
             E,
             &[
-                (Delta2d::Up, E.clone() | B.clone()),
+                (Delta2d::Down, E.clone() | B.clone()),
                 (Delta2d::Left, E.clone() | D.clone()),
                 (Delta2d::Right, E.clone() | F.clone()),
-                (Delta2d::Down, E.clone() | H.clone()),
+                (Delta2d::Up, E.clone() | H.clone()),
             ],
         )
         .allow(
             A,
             &[
                 (Delta2d::Left, C.clone() | F.clone() | I.clone()),
-                (Delta2d::Up, G.clone() | H.clone() | I.clone()),
+                (Delta2d::Down, G.clone() | H.clone() | I.clone()),
             ],
         )
         .allow(
@@ -54,20 +54,20 @@ fn main() {
             &[
                 (Delta2d::Left, A.clone() | B.clone()),
                 (Delta2d::Right, C.clone() | B.clone()),
-                (Delta2d::Up, G.clone() | H.clone() | I.clone()),
+                (Delta2d::Down, G.clone() | H.clone() | I.clone()),
             ],
         )
         .allow(
             C,
             &[
-                (Delta2d::Up, G.clone() | H.clone() | I.clone()),
+                (Delta2d::Down, G.clone() | H.clone() | I.clone()),
                 (Delta2d::Right, A.clone() | D.clone() | G.clone()),
             ],
         )
         .allow(
             G,
             &[
-                (Delta2d::Down, A.clone() | B.clone() | C.clone()),
+                (Delta2d::Up, A.clone() | B.clone() | C.clone()),
                 (Delta2d::Left, C.clone() | F.clone() | I.clone()),
             ],
         )
@@ -75,7 +75,7 @@ fn main() {
             I,
             &[
                 (Delta2d::Right, A.clone() | D.clone() | G.clone()),
-                (Delta2d::Down, A.clone() | B.clone() | C.clone()),
+                (Delta2d::Up, A.clone() | B.clone() | C.clone()),
             ],
         )
         .allow(
@@ -83,22 +83,22 @@ fn main() {
             &[
                 (Delta2d::Left, G.clone() | H.clone()),
                 (Delta2d::Right, I.clone() | H.clone()),
-                (Delta2d::Down, A.clone() | B.clone() | C.clone()),
+                (Delta2d::Up, A.clone() | B.clone() | C.clone()),
             ],
         )
         .allow(
             F,
             &[
-                (Delta2d::Up, C.clone() | F.clone()),
-                (Delta2d::Down, I.clone() | F.clone()),
+                (Delta2d::Down, C.clone() | F.clone()),
+                (Delta2d::Up, I.clone() | F.clone()),
                 (Delta2d::Right, A.clone() | D.clone() | C.clone()),
             ],
         )
         .allow(
             D,
             &[
-                (Delta2d::Up, A.clone() | D.clone()),
-                (Delta2d::Down, G.clone() | D.clone()),
+                (Delta2d::Down, A.clone() | D.clone()),
+                (Delta2d::Up, G.clone() | D.clone()),
                 (Delta2d::Left, C.clone() | F.clone() | I.clone()),
             ],
         )
@@ -106,11 +106,11 @@ fn main() {
             J,
             &[
                 (
-                    Delta2d::Up,
+                    Delta2d::Down,
                     J.clone() | G.clone() | H.clone() | I.clone() | K.clone(),
                 ),
                 (
-                    Delta2d::Down,
+                    Delta2d::Up,
                     J.clone() | A.clone() | B.clone() | C.clone() | K.clone(),
                 ),
                 (
