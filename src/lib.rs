@@ -6,13 +6,13 @@
 //! cells (such as a square grid) from all possible states to only the states
 //! possible with a given ruleset, selecting randomly where ambiguous.
 
-pub mod set_rule;
+pub mod grid_2d;
+pub mod rules;
 mod space;
-pub mod square_grid;
 pub mod state;
 
 use rand::{thread_rng, Rng};
-use set_rule::{SetCollapseObserver, SetCollapseRule};
+use rules::{SetCollapseObserver, SetCollapseRule};
 pub use space::*;
 use state::StateSet;
 use std::collections::{HashSet, VecDeque};

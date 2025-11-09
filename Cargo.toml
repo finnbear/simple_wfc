@@ -1,10 +1,9 @@
 [package]
 name = "wfc"
-version = "0.3.0"
-authors = ["Jeff Downie"]
+version = "0.1.0-alpha.1"
 description = "A basic implementation of wave-function collapse for procedural generation"
-repository = "https://github.com/JeffDownie/wfc"
-homepage = "https://github.com/JeffDownie/wfc"
+repository = "https://github.com/finnbear/wfc"
+homepage = "https://github.com/finnbear/wfc"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 edition = "2021"
@@ -21,26 +20,7 @@ exclude = [
 
 [dependencies]
 bit-vec = "0.8.0"
-ndarray = "0.17.1"
 rand = "0.8.5"
 
 [dev-dependencies]
 image = "0.24.2"
-
-[lints.clippy]
-cargo        = { priority = -1, level = "deny" }
-complexity   = { priority = -1, level = "deny" }
-correctness  = { priority = -1, level = "deny" }
-nursery      = { priority = -1, level = "deny" }
-pedantic     = { priority = -1, level = "deny" }
-perf         = { priority = -1, level = "deny" }
-restriction  = { priority = -1, level = "deny" }
-style        = { priority = -1, level = "deny" }
-suspicious   = { priority = -1, level = "deny" }
-
-blanket_clippy_restriction_lints = "allow"
-missing_inline_in_public_items = "allow"
-must_use_candidate = "allow"
-unseparated_literal_suffix = "allow"
-implicit_return = "allow"
-dbg_macro = "warn"

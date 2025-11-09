@@ -1,6 +1,6 @@
-use wfc::square_grid::SquareGrid;
+use wfc::grid_2d::Grid2d;
 use wfc::state::StateSet;
-use wfc::{collapse, set_rule::*, AllState};
+use wfc::{collapse, rules::*, AllState};
 
 type S = StateSet<3>;
 
@@ -28,7 +28,7 @@ fn main() {
         .allow(&B, &[(UP, C), (DOWN, C)])
         .build();
 
-    let mut space = SquareGrid::new(20, 10, |_, _| S::all());
+    let mut space = Grid2d::new(20, 10, |_, _| S::all());
     collapse(&mut space, &rule);
     for y in 0..10 {
         for x in 0..20 {

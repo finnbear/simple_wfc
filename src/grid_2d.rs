@@ -1,13 +1,19 @@
 use crate::{state::StateSet, InvertDelta, Space};
 use std::ops::{Index, IndexMut};
 
-/// Basic square grid implementing `crate::Space`
+/// Basic square grid implementing [`crate::Space`]
 ///
-/// coordinates and coordinate directions are specified as `(isize, isize)`.
-pub struct SquareGrid<T> {
+/// Coordinates are specified as [`Coordinate2d`].
+pub struct Grid2d<T> {
     cells: Box<[T]>,
     width: u32,
     height: u32,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Coordinate2d {
+    pub x: u32,
+    pub y: u32,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -40,15 +46,15 @@ impl InvertDelta for Delta2d {
     }
 }
 
-impl<T> SquareGrid<T> {
-    /// Create a new `SquareGrid`
+impl<T> Grid2d<T> {
+    /// Create a new `Grid2d`
     ///
     /// * `width` - width of the grid
     /// * `height` - height of the grid
     /// * `init_fn` - callback to set the initial state of each cell based on
     /// coordinate
     pub fn new(width: u32, height: u32, init_fn: impl Fn(u32, u32) -> T) -> Self {
-        let mut cells = Vec::new();
+        let mut cells = Vec::with_capacity((width * height) as usize);
         for y in 0..height {
             for x in 0..width {
                 cells.push(init_fn(x, y));
@@ -62,24 +68,24 @@ impl<T> SquareGrid<T> {
     }
 }
 
-impl Index<<Self as Space>::Coordinate> for SquareGrid<StateSet> {
+impl Index<<Self as Space>::Coordinate> for Grid2d<StateSet> {
     type Output = StateSet;
 
     fn index(&self, index: <Self as Space>::Coordinate) -> &Self::Output {
-        let (x, y) = index;
+        let Coordinate2d { x, y } = index;
         &self.cells[(x + y * self.width) as usize]
     }
 }
 
-impl IndexMut<<Self as Space>::Coordinate> for SquareGrid<StateSet> {
+impl IndexMut<<Self as Space>::Coordinate> for Grid2d<StateSet> {
     fn index_mut(&mut self, index: <Self as Space>::Coordinate) -> &mut Self::Output {
-        let (x, y) = index;
+        let Coordinate2d { x, y } = index;
         &mut self.cells[(x + y * self.width) as usize]
     }
 }
 
-impl Space for SquareGrid<StateSet> {
-    type Coordinate = (u32, u32);
+impl Space for Grid2d<StateSet> {
+    type Coordinate = Coordinate2d;
     type CoordinateDelta = Delta2d;
 
     const NEIGHBORS: &'static [Self::CoordinateDelta] =
@@ -88,7 +94,7 @@ impl Space for SquareGrid<StateSet> {
     fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
         for y in 0..self.height {
             for x in 0..self.width {
-                visitor((x, y));
+                visitor(Coordinate2d { x, y });
             }
         }
     }
@@ -96,7 +102,7 @@ impl Space for SquareGrid<StateSet> {
     fn neighbors(&self, coord: Self::Coordinate, neighbors: &mut [Option<Self::Coordinate>]) {
         assert!(Self::NEIGHBORS.len() <= neighbors.len());
 
-        let (x, y) = coord;
+        let Coordinate2d { x, y } = coord;
         for i in 0..Self::NEIGHBORS.len() {
             let (dx, dy) = Self::NEIGHBORS[i].offset();
             neighbors[i] = if (x == 0 && dx == -1) || (y == 0 && dy == -1) {
@@ -104,7 +110,10 @@ impl Space for SquareGrid<StateSet> {
             } else if (x == self.width - 1 && dx == 1) || (y == self.height - 1 && dy == 1) {
                 None
             } else {
-                Some((x.wrapping_add_signed(dx), y.wrapping_add_signed(dy)))
+                Some(Coordinate2d {
+                    x: x.wrapping_add_signed(dx),
+                    y: y.wrapping_add_signed(dy),
+                })
             };
         }
     }

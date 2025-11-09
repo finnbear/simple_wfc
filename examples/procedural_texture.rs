@@ -1,11 +1,11 @@
 use image::{ColorType, ImageFormat, RgbImage};
-use wfc::square_grid::{Delta2d, SquareGrid};
+use wfc::grid_2d::{Coordinate2d, Delta2d, Grid2d};
 use wfc::state::{State, StateSet};
-use wfc::{collapse, set_rule::*};
+use wfc::{collapse, rules::*};
 
 type S = StateSet;
 
-type Grid = SquareGrid<S>;
+type Grid = Grid2d<S>;
 
 const WIDTH_TILES: u32 = 40;
 const HEIGHT_TILES: u32 = 40;
@@ -32,7 +32,7 @@ fn main() {
     //
     // A-I form a 9-quadrant for rectangles, J is open space around them, and K can touch only J
 
-    let rule = SetCollapseRuleBuilder::<SquareGrid<StateSet>, _>::new(UniformSetCollapseObserver)
+    let rule = SetCollapseRuleBuilder::<Grid2d<StateSet>, _>::new(UniformSetCollapseObserver)
         .allow(
             E,
             &[
@@ -139,7 +139,12 @@ fn main() {
             let image_start_y = y * 8;
             let tile_start_x;
             let tile_start_y;
-            match grid[(x as u32, y as u32)].clone() {
+            match grid[Coordinate2d {
+                x: x as u32,
+                y: y as u32,
+            }]
+            .clone()
+            {
                 a if a.has(A) => {
                     tile_start_x = 0;
                     tile_start_y = 0;

@@ -73,7 +73,7 @@ where
     /// A - you don't have to explicitly set both rules.
     ///
     /// States which do not have any allowed neighbors for a given coordinate
-    /// delta will equire that those coordinates are outside of world-space.
+    /// delta will require that those coordinates are outside of world-space.
     pub fn allow(mut self, state: State, neighbors: &[(Sp::CoordinateDelta, StateSet)]) -> Self {
         for (delta, neighbor) in neighbors {
             let mut neighbor_states = Vec::new();

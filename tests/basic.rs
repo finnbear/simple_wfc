@@ -1,6 +1,6 @@
 use rand::{thread_rng, Rng};
 use wfc::collapse;
-use wfc::square_grid::SquareGrid;
+use wfc::grid_2d::Grid2d;
 use wfc::*;
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
@@ -19,7 +19,7 @@ impl State for PossibleStates {
     }
 }
 
-type TestGrid = SquareGrid<PossibleStates>;
+type TestGrid = Grid2d<PossibleStates>;
 
 struct Rule;
 
@@ -53,7 +53,7 @@ impl CollapseRule<PossibleStates, TestGrid> for Rule {
 
 #[test]
 fn test_basic() {
-    let mut grid = SquareGrid::new(10, 10, |_, _| PossibleStates::AB);
+    let mut grid = Grid2d::new(10, 10, |_, _| PossibleStates::AB);
     collapse(&mut grid, &Rule);
     for y in 0..10 {
         for x in 0..9 {
