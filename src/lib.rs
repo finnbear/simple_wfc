@@ -7,6 +7,7 @@
 //! possible with a given ruleset, selecting randomly where ambiguous.
 
 pub mod grid_2d;
+pub mod grid_3d;
 pub mod rules;
 mod space;
 pub mod state;
@@ -57,9 +58,9 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
             unresolved_set.insert(coord);
         }
     });
-    let mut neighbors = vec![None; Sp::NEIGHBORS.len()].into_boxed_slice();
+    let mut neighbors = vec![None; Sp::DIRECTIONS.len()].into_boxed_slice();
     let mut neighbor_states =
-        vec![Option::<StateSet>::None; Sp::NEIGHBORS.len()].into_boxed_slice();
+        vec![Option::<StateSet>::None; Sp::DIRECTIONS.len()].into_boxed_slice();
     let mut to_propogate = VecDeque::new();
 
     for coordinate in unresolved_set.iter() {
@@ -81,11 +82,11 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
     ) {
         to_propogate.clear();
         space.neighbors(to_collapse, &mut neighbors);
-        for i in 0..Sp::NEIGHBORS.len() {
+        for i in 0..Sp::DIRECTIONS.len() {
             neighbor_states[i] = neighbors[i].map(|coord| space[coord].clone());
         }
         rule.observe(&mut space[to_collapse], &neighbor_states[..]);
-        for i in 0..Sp::NEIGHBORS.len() {
+        for i in 0..Sp::DIRECTIONS.len() {
             if let Some(neighbor_coord) = neighbors[i] {
                 to_propogate.push_back(neighbor_coord);
             }
@@ -112,14 +113,14 @@ fn run_propogation<Sp: Space, O: SetCollapseObserver>(
 
         if entropy_before != 0 {
             space.neighbors(propogating, neighbors);
-            for i in 0..Sp::NEIGHBORS.len() {
+            for i in 0..Sp::DIRECTIONS.len() {
                 neighbor_states[i] = neighbors[i].map(|coord| space[coord].clone());
             }
             rule.collapse(&mut space[propogating], neighbor_states);
             let entropy_after = space[propogating].entropy();
 
             if entropy_after < entropy_before {
-                for i in 0..Sp::NEIGHBORS.len() {
+                for i in 0..Sp::DIRECTIONS.len() {
                     if let Some(neighbor) = neighbors[i] {
                         if space[neighbor].entropy() != 0 {
                             to_propogate.push_back(neighbor);

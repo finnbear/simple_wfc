@@ -93,8 +93,8 @@ where
     }
 
     fn get_offset_index(&mut self, offset: Sp::CoordinateDelta) -> usize {
-        for i in 0..Sp::NEIGHBORS.len() {
-            if Sp::NEIGHBORS[i] == offset {
+        for i in 0..Sp::DIRECTIONS.len() {
+            if Sp::DIRECTIONS[i] == offset {
                 return i;
             }
         }
@@ -119,7 +119,7 @@ where
         let mut state_rules = Vec::new();
         let mut remaining_state = StateSet::all();
         for mut proto_rule in self.state_rules {
-            while proto_rule.allowed_neighbors.len() < Sp::NEIGHBORS.len() {
+            while proto_rule.allowed_neighbors.len() < Sp::DIRECTIONS.len() {
                 proto_rule.allowed_neighbors.push(None);
             }
             remaining_state.remove(proto_rule.state);
@@ -133,7 +133,7 @@ where
         for remaining_state in remaining_states {
             state_rules.push((
                 remaining_state,
-                vec![None; Sp::NEIGHBORS.len()].into_boxed_slice(),
+                vec![None; Sp::DIRECTIONS.len()].into_boxed_slice(),
             ));
         }
         SetCollapseRule {

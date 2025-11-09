@@ -28,7 +28,7 @@ pub trait Space: IndexMut<Self::Coordinate, Output = StateSet> + 'static {
     /// Spatial relationship between cells for accessing neighbors
     type CoordinateDelta: Copy + Debug + 'static;
 
-    const NEIGHBORS: &'static [Self::CoordinateDelta];
+    const DIRECTIONS: &'static [Self::CoordinateDelta];
 
     /// Get every valid coordinate in the space.
     fn visit_coordinates(&self, visitor: impl FnMut(Self::Coordinate));

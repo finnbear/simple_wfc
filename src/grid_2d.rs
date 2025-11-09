@@ -17,15 +17,15 @@ pub struct Coordinate2d {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Delta2d {
+pub enum Direction2d {
     Right,
     Up,
     Left,
     Down,
 }
 
-impl Delta2d {
-    pub fn offset(self) -> (i32, i32) {
+impl Direction2d {
+    fn offset(self) -> (i32, i32) {
         match self {
             Self::Right => (1, 0),
             Self::Up => (0, 1),
@@ -35,7 +35,7 @@ impl Delta2d {
     }
 }
 
-impl InvertDelta for Delta2d {
+impl InvertDelta for Direction2d {
     fn invert_delta(&self) -> Self {
         match self {
             Self::Left => Self::Right,
@@ -86,10 +86,14 @@ impl IndexMut<<Self as Space>::Coordinate> for Grid2d<StateSet> {
 
 impl Space for Grid2d<StateSet> {
     type Coordinate = Coordinate2d;
-    type CoordinateDelta = Delta2d;
+    type CoordinateDelta = Direction2d;
 
-    const NEIGHBORS: &'static [Self::CoordinateDelta] =
-        &[Delta2d::Right, Delta2d::Up, Delta2d::Left, Delta2d::Down];
+    const DIRECTIONS: &'static [Self::CoordinateDelta] = &[
+        Direction2d::Right,
+        Direction2d::Up,
+        Direction2d::Left,
+        Direction2d::Down,
+    ];
 
     fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
         for y in 0..self.height {
@@ -100,11 +104,11 @@ impl Space for Grid2d<StateSet> {
     }
 
     fn neighbors(&self, coord: Self::Coordinate, neighbors: &mut [Option<Self::Coordinate>]) {
-        assert!(Self::NEIGHBORS.len() <= neighbors.len());
+        assert!(Self::DIRECTIONS.len() <= neighbors.len());
 
         let Coordinate2d { x, y } = coord;
-        for i in 0..Self::NEIGHBORS.len() {
-            let (dx, dy) = Self::NEIGHBORS[i].offset();
+        for i in 0..Self::DIRECTIONS.len() {
+            let (dx, dy) = Self::DIRECTIONS[i].offset();
             neighbors[i] = if (x == 0 && dx == -1) || (y == 0 && dy == -1) {
                 None
             } else if (x == self.width - 1 && dx == 1) || (y == self.height - 1 && dy == 1) {

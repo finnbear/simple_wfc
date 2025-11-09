@@ -1,5 +1,5 @@
 use image::{ColorType, ImageFormat, RgbImage};
-use wfc::grid_2d::{Coordinate2d, Delta2d, Grid2d};
+use wfc::grid_2d::{Coordinate2d, Direction2d, Grid2d};
 use wfc::state::{State, StateSet};
 use wfc::{collapse, rules::*};
 
@@ -36,89 +36,89 @@ fn main() {
         .allow(
             E,
             &[
-                (Delta2d::Down, E.clone() | B.clone()),
-                (Delta2d::Left, E.clone() | D.clone()),
-                (Delta2d::Right, E.clone() | F.clone()),
-                (Delta2d::Up, E.clone() | H.clone()),
+                (Direction2d::Down, E.clone() | B.clone()),
+                (Direction2d::Left, E.clone() | D.clone()),
+                (Direction2d::Right, E.clone() | F.clone()),
+                (Direction2d::Up, E.clone() | H.clone()),
             ],
         )
         .allow(
             A,
             &[
-                (Delta2d::Left, C.clone() | F.clone() | I.clone()),
-                (Delta2d::Down, G.clone() | H.clone() | I.clone()),
+                (Direction2d::Left, C.clone() | F.clone() | I.clone()),
+                (Direction2d::Down, G.clone() | H.clone() | I.clone()),
             ],
         )
         .allow(
             B,
             &[
-                (Delta2d::Left, A.clone() | B.clone()),
-                (Delta2d::Right, C.clone() | B.clone()),
-                (Delta2d::Down, G.clone() | H.clone() | I.clone()),
+                (Direction2d::Left, A.clone() | B.clone()),
+                (Direction2d::Right, C.clone() | B.clone()),
+                (Direction2d::Down, G.clone() | H.clone() | I.clone()),
             ],
         )
         .allow(
             C,
             &[
-                (Delta2d::Down, G.clone() | H.clone() | I.clone()),
-                (Delta2d::Right, A.clone() | D.clone() | G.clone()),
+                (Direction2d::Down, G.clone() | H.clone() | I.clone()),
+                (Direction2d::Right, A.clone() | D.clone() | G.clone()),
             ],
         )
         .allow(
             G,
             &[
-                (Delta2d::Up, A.clone() | B.clone() | C.clone()),
-                (Delta2d::Left, C.clone() | F.clone() | I.clone()),
+                (Direction2d::Up, A.clone() | B.clone() | C.clone()),
+                (Direction2d::Left, C.clone() | F.clone() | I.clone()),
             ],
         )
         .allow(
             I,
             &[
-                (Delta2d::Right, A.clone() | D.clone() | G.clone()),
-                (Delta2d::Up, A.clone() | B.clone() | C.clone()),
+                (Direction2d::Right, A.clone() | D.clone() | G.clone()),
+                (Direction2d::Up, A.clone() | B.clone() | C.clone()),
             ],
         )
         .allow(
             H,
             &[
-                (Delta2d::Left, G.clone() | H.clone()),
-                (Delta2d::Right, I.clone() | H.clone()),
-                (Delta2d::Up, A.clone() | B.clone() | C.clone()),
+                (Direction2d::Left, G.clone() | H.clone()),
+                (Direction2d::Right, I.clone() | H.clone()),
+                (Direction2d::Up, A.clone() | B.clone() | C.clone()),
             ],
         )
         .allow(
             F,
             &[
-                (Delta2d::Down, C.clone() | F.clone()),
-                (Delta2d::Up, I.clone() | F.clone()),
-                (Delta2d::Right, A.clone() | D.clone() | C.clone()),
+                (Direction2d::Down, C.clone() | F.clone()),
+                (Direction2d::Up, I.clone() | F.clone()),
+                (Direction2d::Right, A.clone() | D.clone() | C.clone()),
             ],
         )
         .allow(
             D,
             &[
-                (Delta2d::Down, A.clone() | D.clone()),
-                (Delta2d::Up, G.clone() | D.clone()),
-                (Delta2d::Left, C.clone() | F.clone() | I.clone()),
+                (Direction2d::Down, A.clone() | D.clone()),
+                (Direction2d::Up, G.clone() | D.clone()),
+                (Direction2d::Left, C.clone() | F.clone() | I.clone()),
             ],
         )
         .allow(
             J,
             &[
                 (
-                    Delta2d::Down,
+                    Direction2d::Down,
                     J.clone() | G.clone() | H.clone() | I.clone() | K.clone(),
                 ),
                 (
-                    Delta2d::Up,
+                    Direction2d::Up,
                     J.clone() | A.clone() | B.clone() | C.clone() | K.clone(),
                 ),
                 (
-                    Delta2d::Left,
+                    Direction2d::Left,
                     J.clone() | C.clone() | F.clone() | I.clone() | K.clone(),
                 ),
                 (
-                    Delta2d::Right,
+                    Direction2d::Right,
                     J.clone() | A.clone() | D.clone() | G.clone() | K.clone(),
                 ),
             ],
