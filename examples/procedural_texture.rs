@@ -1,7 +1,7 @@
 use image::{ColorType, ImageFormat, RgbImage};
 use wfc::grid_2d::{Coordinate2d, Direction2d, Grid2d};
 use wfc::state::{State, StateSet};
-use wfc::{collapse, rules::*};
+use wfc::{collapse, rules::*, Space};
 
 type S = StateSet;
 
@@ -10,8 +10,14 @@ type Grid = Grid2d<S>;
 const WIDTH_TILES: u32 = 40;
 const HEIGHT_TILES: u32 = 40;
 
-#[allow(non_snake_case)]
 fn main() {
+    StateSet::scope(11, || {
+        test();
+    });
+}
+
+#[allow(non_snake_case)]
+fn test() {
     let A = State::state(0);
     let B = State::state(1);
     let C = State::state(2);
@@ -124,7 +130,13 @@ fn main() {
             ],
         )
         .build();
-    let mut grid = Grid::new(WIDTH_TILES as u32, HEIGHT_TILES as u32, |_| S::all());
+    let mut grid = Grid::new(
+        Coordinate2d {
+            x: WIDTH_TILES as u32,
+            y: HEIGHT_TILES as u32,
+        },
+        |_| S::all(),
+    );
     collapse(&mut grid, &rule);
 
     let image_bytes = include_bytes!("pattern.png");

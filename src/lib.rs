@@ -7,6 +7,7 @@
 //! possible with a given ruleset, selecting randomly where ambiguous.
 
 mod collapse;
+pub mod extract;
 pub mod grid_2d;
 pub mod grid_3d;
 pub mod rules;

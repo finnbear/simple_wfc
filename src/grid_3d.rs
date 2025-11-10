@@ -1,17 +1,16 @@
-use crate::{state::StateSet, InvertDelta, Space};
+use crate::{InvertDelta, Space};
 use std::ops::{Index, IndexMut};
 
 /// Basic square grid implementing [`crate::Space`]
 ///
 /// Coordinates are specified as [`Coordinate2d`].
+#[derive(Hash, PartialEq, Eq, Debug, Clone)]
 pub struct Grid3d<T> {
     cells: Box<[T]>,
-    width: u32,
-    height: u32,
-    depth: u32,
+    dimensions: Coordinate3d,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Coordinate3d {
     pub x: u32,
     pub y: u32,
@@ -54,43 +53,25 @@ impl InvertDelta for Direction3d {
     }
 }
 
-impl<T> Grid3d<T> {
-    /// Create a new `Grid3d`
-    pub fn new(width: u32, height: u32, depth: u32, init_fn: impl Fn(Coordinate3d) -> T) -> Self {
-        let mut cells = Vec::with_capacity((width * height) as usize);
-        for z in 0..depth {
-            for y in 0..height {
-                for x in 0..width {
-                    cells.push(init_fn(Coordinate3d { x, y, z }));
-                }
-            }
-        }
-        Self {
-            cells: cells.into_boxed_slice(),
-            width,
-            height,
-            depth,
-        }
-    }
-}
+impl<T> Index<Coordinate3d> for Grid3d<T> {
+    type Output = T;
 
-impl Index<<Self as Space>::Coordinate> for Grid3d<StateSet> {
-    type Output = StateSet;
-
-    fn index(&self, index: <Self as Space>::Coordinate) -> &Self::Output {
+    fn index(&self, index: Coordinate3d) -> &Self::Output {
         let Coordinate3d { x, y, z } = index;
-        &self.cells[(x + y * self.width + z * self.width * self.width) as usize]
+        &self.cells
+            [(x + y * self.dimensions.x + z * self.dimensions.x * self.dimensions.y) as usize]
     }
 }
 
-impl IndexMut<<Self as Space>::Coordinate> for Grid3d<StateSet> {
-    fn index_mut(&mut self, index: <Self as Space>::Coordinate) -> &mut Self::Output {
+impl<T> IndexMut<Coordinate3d> for Grid3d<T> {
+    fn index_mut(&mut self, index: Coordinate3d) -> &mut Self::Output {
         let Coordinate3d { x, y, z } = index;
-        &mut self.cells[(x + y * self.width + z * self.width * self.width) as usize]
+        &mut self.cells
+            [(x + y * self.dimensions.x + z * self.dimensions.x * self.dimensions.y) as usize]
     }
 }
 
-impl Space for Grid3d<StateSet> {
+impl<T: 'static> Space<T> for Grid3d<T> {
     type Coordinate = Coordinate3d;
     type Direction = Direction3d;
 
@@ -103,10 +84,53 @@ impl Space for Grid3d<StateSet> {
         Direction3d::NegZ,
     ];
 
+    /// Create a new `Grid3d`
+    fn new(dimensions: Coordinate3d, init_fn: impl Fn(Coordinate3d) -> T) -> Self {
+        let mut cells = Vec::with_capacity((dimensions.x * dimensions.y * dimensions.y) as usize);
+        for z in 0..dimensions.z {
+            for y in 0..dimensions.y {
+                for x in 0..dimensions.x {
+                    cells.push(init_fn(Coordinate3d { x, y, z }));
+                }
+            }
+        }
+        Self {
+            cells: cells.into_boxed_slice(),
+            dimensions,
+        }
+    }
+
+    fn dimensions(&self) -> Self::Coordinate {
+        self.dimensions
+    }
+
+    fn map(coordinate: Self::Coordinate, map_fn: impl Fn(u32) -> u32) -> Self::Coordinate {
+        Coordinate3d {
+            x: map_fn(coordinate.x),
+            y: map_fn(coordinate.y),
+            z: map_fn(coordinate.z),
+        }
+    }
+
+    fn add_sub(
+        &self,
+        start: Self::Coordinate,
+        add: Self::Coordinate,
+        sub: Self::Coordinate,
+    ) -> Option<Self::Coordinate> {
+        let x = start.x.checked_add_signed(add.x as i32 - sub.x as i32)?;
+        let y = start.y.checked_add_signed(add.y as i32 - sub.y as i32)?;
+        let z = start.z.checked_add_signed(add.z as i32 - sub.z as i32)?;
+        if x >= self.dimensions.x - 1 || y >= self.dimensions.y - 1 || z >= self.dimensions.z - 1 {
+            return None;
+        }
+        Some(Coordinate3d { x, y, z })
+    }
+
     fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
-        for z in 0..self.depth {
-            for y in 0..self.height {
-                for x in 0..self.width {
+        for z in 0..self.dimensions.z {
+            for y in 0..self.dimensions.y {
+                for x in 0..self.dimensions.x {
                     visitor(Coordinate3d { x, y, z });
                 }
             }
@@ -122,9 +146,9 @@ impl Space for Grid3d<StateSet> {
         let (dx, dy, dz) = direction.offset();
         if (x == 0 && dx == -1) || (y == 0 && dy == -1) || (z == 0 && dz == -1) {
             None
-        } else if (x == self.width - 1 && dx == 1)
-            || (y == self.height - 1 && dy == 1)
-            || (z == self.depth - 1 && dz == 1)
+        } else if (x == self.dimensions.x - 1 && dx == 1)
+            || (y == self.dimensions.y - 1 && dy == 1)
+            || (z == self.dimensions.z - 1 && dz == 1)
         {
             None
         } else {

@@ -1,4 +1,3 @@
-use crate::state::StateSet;
 use std::{fmt::Debug, hash::Hash, ops::IndexMut};
 
 /// Represents coordinate deltas which have an inverse - the delta which undoes
@@ -22,13 +21,28 @@ pub trait InvertDelta {
 /// - `CoordinateDelta` represents adjacency relations between cells. In
 /// general, a collapse rule supplies a list of coordinate deltas to get
 /// neighbor cell coordinates.
-pub trait Space: IndexMut<Self::Coordinate, Output = StateSet> + 'static {
+pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
     /// Coordinates for cells in the space
-    type Coordinate: Copy + Hash + Ord;
+    type Coordinate: Default + Copy + Hash + Ord;
     /// Spatial relationship between cells for accessing neighbors
-    type Direction: Copy + Debug + 'static;
+    type Direction: Copy + Debug + Eq + InvertDelta + 'static;
 
     const DIRECTIONS: &'static [Self::Direction];
+
+    /// The grid will occupy `(0,0,0)..dimensions`.
+    fn new(dimensions: Self::Coordinate, init_fn: impl Fn(Self::Coordinate) -> T) -> Self;
+
+    fn dimensions(&self) -> Self::Coordinate;
+
+    fn map(coordinate: Self::Coordinate, map_fn: impl Fn(u32) -> u32) -> Self::Coordinate;
+
+    /// Computes `start + add - sub`, returning `Some` if the result is in the space.
+    fn add_sub(
+        &self,
+        start: Self::Coordinate,
+        add: Self::Coordinate,
+        sub: Self::Coordinate,
+    ) -> Option<Self::Coordinate>;
 
     /// Get every valid coordinate in the space.
     fn visit_coordinates(&self, visitor: impl FnMut(Self::Coordinate));

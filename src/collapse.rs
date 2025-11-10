@@ -4,7 +4,7 @@ use crate::state::StateSet;
 use rand::{thread_rng, Rng};
 use std::collections::{HashSet, VecDeque};
 
-fn find_next_to_collapse<Sp: Space>(
+fn find_next_to_collapse<Sp: Space<StateSet>>(
     unresoved_set: &mut HashSet<Sp::Coordinate>,
     lowest_entropy_set: &mut Vec<Sp::Coordinate>,
     resolved_set: &mut HashSet<Sp::Coordinate>,
@@ -35,7 +35,10 @@ fn find_next_to_collapse<Sp: Space>(
 
 /// Perform the wave function collapse algorithm on a given state-space with
 /// the provided collapse rule.
-pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCollapseRule<O>) {
+pub fn collapse<Sp: Space<StateSet>, O: SetCollapseObserver>(
+    space: &mut Sp,
+    rule: &SetCollapseRule<O>,
+) {
     let mut unresolved_set = HashSet::new();
     let mut resolved_set = HashSet::new();
     let mut lowest_entropy_set = Vec::new();
@@ -87,7 +90,7 @@ pub fn collapse<Sp: Space, O: SetCollapseObserver>(space: &mut Sp, rule: &SetCol
     }
 }
 
-fn fill_neighbors<Sp: Space>(
+fn fill_neighbors<Sp: Space<StateSet>>(
     space: &Sp,
     coord: Sp::Coordinate,
     directions: &mut [Option<Sp::Coordinate>],
@@ -97,7 +100,7 @@ fn fill_neighbors<Sp: Space>(
     }
 }
 
-fn run_propogation<Sp: Space, O: SetCollapseObserver>(
+fn run_propogation<Sp: Space<StateSet>, O: SetCollapseObserver>(
     space: &mut Sp,
     rule: &SetCollapseRule<O>,
     to_propogate: &mut VecDeque<Sp::Coordinate>,

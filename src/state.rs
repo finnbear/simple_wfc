@@ -1,9 +1,8 @@
 use bit_vec::BitVec;
 use std::ops::{BitAnd, BitOr, BitXor};
+use std::sync::atomic::{AtomicU32, Ordering};
 
 /// A state type which uses bits of a u64 to describe up to 64 separate possible final states.
-///
-/// * `FINAL_STATE_COUNT` - the total number of final (fully collapsed) states
 #[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct StateSet(BitVec);
 
@@ -17,20 +16,51 @@ impl State {
     }
 }
 
-const FINAL_STATE_COUNT: u32 = 11;
+thread_local! {
+    static STATE_COUNT: AtomicU32 = const { AtomicU32::new(u32::MAX) };
+}
+
+fn state_count() -> u32 {
+    STATE_COUNT.with(|count| {
+        let loaded = count.load(Ordering::Relaxed);
+        debug_assert_ne!(
+            loaded,
+            u32::MAX,
+            "all StateSet's must be constructed within StateSet::scope"
+        );
+        loaded
+    })
+}
 
 impl StateSet {
+    /// All [`StateSet`]'s created in `scope` will have `state_count` states.
+    pub fn scope<R>(state_count: u32, scope: impl FnOnce() -> R) -> R {
+        STATE_COUNT.with(|count| {
+            #[cfg(debug_assertions)]
+            let old = count.load(Ordering::Relaxed);
+            count.store(state_count, Ordering::Relaxed);
+            let ret = scope();
+            #[cfg(debug_assertions)]
+            count.store(old, Ordering::Relaxed);
+            ret
+        })
+    }
+
     /// Creates a state representing the states numbered by members of `states`
     pub fn with_states(states: &[State]) -> Self {
-        let mut ret = BitVec::from_elem(FINAL_STATE_COUNT as usize, false);
+        let mut ret = BitVec::from_elem(state_count() as usize, false);
         for i in states {
             ret.set(i.0 as usize, true);
         }
         Self(ret)
     }
 
+    pub fn len() -> u32 {
+        state_count()
+    }
+
     pub fn all() -> Self {
-        Self(BitVec::from_elem(FINAL_STATE_COUNT as usize, true))
+        Self(BitVec::from_elem(state_count() as usize, true))
     }
 
     pub fn entropy(&self) -> u32 {

@@ -1,16 +1,16 @@
-use crate::{state::StateSet, InvertDelta, Space};
+use crate::{InvertDelta, Space};
 use std::ops::{Index, IndexMut};
 
 /// Basic square grid implementing [`crate::Space`]
 ///
 /// Coordinates are specified as [`Coordinate2d`].
+#[derive(Hash, PartialEq, Eq, Debug, Clone)]
 pub struct Grid2d<T> {
     cells: Box<[T]>,
-    width: u32,
-    height: u32,
+    dimensions: Coordinate2d,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Coordinate2d {
     pub x: u32,
     pub y: u32,
@@ -46,45 +46,23 @@ impl InvertDelta for Direction2d {
     }
 }
 
-impl<T> Grid2d<T> {
-    /// Create a new `Grid2d`
-    ///
-    /// * `width` - width of the grid
-    /// * `height` - height of the grid
-    /// * `init_fn` - callback to set the initial state of each cell based on
-    /// coordinate
-    pub fn new(width: u32, height: u32, init_fn: impl Fn(Coordinate2d) -> T) -> Self {
-        let mut cells = Vec::with_capacity((width * height) as usize);
-        for y in 0..height {
-            for x in 0..width {
-                cells.push(init_fn(Coordinate2d { x, y }));
-            }
-        }
-        Self {
-            cells: cells.into_boxed_slice(),
-            width,
-            height,
-        }
-    }
-}
+impl<T> Index<Coordinate2d> for Grid2d<T> {
+    type Output = T;
 
-impl Index<<Self as Space>::Coordinate> for Grid2d<StateSet> {
-    type Output = StateSet;
-
-    fn index(&self, index: <Self as Space>::Coordinate) -> &Self::Output {
+    fn index(&self, index: Coordinate2d) -> &Self::Output {
         let Coordinate2d { x, y } = index;
-        &self.cells[(x + y * self.width) as usize]
+        &self.cells[(x + y * self.dimensions.x) as usize]
     }
 }
 
-impl IndexMut<<Self as Space>::Coordinate> for Grid2d<StateSet> {
-    fn index_mut(&mut self, index: <Self as Space>::Coordinate) -> &mut Self::Output {
+impl<T> IndexMut<Coordinate2d> for Grid2d<T> {
+    fn index_mut(&mut self, index: Coordinate2d) -> &mut Self::Output {
         let Coordinate2d { x, y } = index;
-        &mut self.cells[(x + y * self.width) as usize]
+        &mut self.cells[(x + y * self.dimensions.x) as usize]
     }
 }
 
-impl Space for Grid2d<StateSet> {
+impl<T: 'static> Space<T> for Grid2d<T> {
     type Coordinate = Coordinate2d;
     type Direction = Direction2d;
 
@@ -95,9 +73,48 @@ impl Space for Grid2d<StateSet> {
         Direction2d::Down,
     ];
 
+    /// Create a new `Grid2d`
+    fn new(dimensions: Coordinate2d, init_fn: impl Fn(Coordinate2d) -> T) -> Self {
+        let mut cells = Vec::with_capacity((dimensions.x * dimensions.y) as usize);
+        for y in 0..dimensions.y {
+            for x in 0..dimensions.x {
+                cells.push(init_fn(Coordinate2d { x, y }));
+            }
+        }
+        Self {
+            cells: cells.into_boxed_slice(),
+            dimensions,
+        }
+    }
+
+    fn dimensions(&self) -> Self::Coordinate {
+        self.dimensions
+    }
+
+    fn map(coordinate: Self::Coordinate, map_fn: impl Fn(u32) -> u32) -> Self::Coordinate {
+        Coordinate2d {
+            x: map_fn(coordinate.x),
+            y: map_fn(coordinate.y),
+        }
+    }
+
+    fn add_sub(
+        &self,
+        start: Self::Coordinate,
+        add: Self::Coordinate,
+        sub: Self::Coordinate,
+    ) -> Option<Self::Coordinate> {
+        let x = start.x.checked_add_signed(add.x as i32 - sub.x as i32)?;
+        let y = start.y.checked_add_signed(add.y as i32 - sub.y as i32)?;
+        if x >= self.dimensions.x - 1 || y >= self.dimensions.y - 1 {
+            return None;
+        }
+        Some(Coordinate2d { x, y })
+    }
+
     fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
-        for y in 0..self.height {
-            for x in 0..self.width {
+        for y in 0..self.dimensions.y {
+            for x in 0..self.dimensions.x {
                 visitor(Coordinate2d { x, y });
             }
         }
@@ -112,7 +129,8 @@ impl Space for Grid2d<StateSet> {
         let (dx, dy) = direction.offset();
         if (x == 0 && dx == -1) || (y == 0 && dy == -1) {
             None
-        } else if (x == self.width - 1 && dx == 1) || (y == self.height - 1 && dy == 1) {
+        } else if (x == self.dimensions.x - 1 && dx == 1) || (y == self.dimensions.y - 1 && dy == 1)
+        {
             None
         } else {
             Some(Coordinate2d {

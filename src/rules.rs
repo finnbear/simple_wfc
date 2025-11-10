@@ -48,13 +48,13 @@ impl StateRule {
 /// builder for [SetCollapseRule]
 ///
 /// Automatically collects used coordinate deltas and manages creating symmetric rules from asymmetric definitions
-pub struct SetCollapseRuleBuilder<Sp: Space, O: SetCollapseObserver + Clone> {
+pub struct SetCollapseRuleBuilder<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> {
     state_rules: Vec<StateRule>,
     observer: O,
     _spooky: PhantomData<Sp>,
 }
 
-impl<Sp: Space, O: SetCollapseObserver + Clone> SetCollapseRuleBuilder<Sp, O>
+impl<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> SetCollapseRuleBuilder<Sp, O>
 where
     Sp::Direction: Eq + Clone + InvertDelta,
 {
@@ -144,6 +144,10 @@ where
 }
 
 impl<O: SetCollapseObserver> SetCollapseRule<O> {
+    pub fn state_count(&self) -> u32 {
+        self.state_rules.len() as u32
+    }
+
     pub fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
         for (state, allowed_neighbors) in &self.state_rules[..] {
             if cell.has(*state) {
@@ -165,5 +169,9 @@ impl<O: SetCollapseObserver> SetCollapseRule<O> {
 
     pub fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
         self.observer.observe(cell, neighbors);
+    }
+
+    pub fn observer(&self) -> &O {
+        &self.observer
     }
 }
