@@ -31,6 +31,7 @@ pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
     /// Spatial relationship between cells for accessing neighbors
     type Direction: Copy + Debug + Eq + InvertDelta + 'static;
     type Axis: Copy + Debug + Eq + 'static;
+    type RotationAxis: Copy + Debug + Eq + 'static;
 
     const DIRECTIONS: &'static [Self::Direction];
 
@@ -44,6 +45,10 @@ pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
         map_fn: impl Fn(Self::Axis, u32) -> u32,
     ) -> Self::Coordinate;
 
+    /// 90 degree rotation of `coordinate` around `axis` as if by looking down that axis
+    /// in a left-handed coordinate system and rotating counter-clockwise.
+    fn perp(&self, coordinate: Self::Coordinate, axis: Self::RotationAxis) -> Self::Coordinate;
+
     /// Computes `start + add - sub`, returning `Some` if the result is in the space.
     fn add_sub(
         &self,
@@ -53,7 +58,7 @@ pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
     ) -> Option<Self::Coordinate>;
 
     /// Get every valid coordinate in the space.
-    fn visit_coordinates(&self, visitor: impl FnMut(Self::Coordinate));
+    fn visit_coordinates(dimensions: Self::Coordinate, visitor: impl FnMut(Self::Coordinate));
     /// Get the neighbor coordinates of a given cell based on a direction.
     fn neighbor(
         &self,

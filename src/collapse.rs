@@ -42,7 +42,7 @@ pub fn collapse<Sp: Space<StateSet>, O: SetCollapseObserver>(
     let mut unresolved_set = HashSet::new();
     let mut resolved_set = HashSet::new();
     let mut lowest_entropy_set = Vec::new();
-    space.visit_coordinates(|coord| {
+    Sp::visit_coordinates(space.dimensions(), |coord| {
         if space[coord].entropy() > 0 {
             unresolved_set.insert(coord);
         }

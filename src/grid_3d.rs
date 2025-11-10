@@ -94,6 +94,7 @@ impl<T: 'static> Space<T> for Grid3d<T> {
     type Coordinate = Coordinate3d;
     type Direction = Direction3d;
     type Axis = Axis3d;
+    type RotationAxis = Axis3d;
 
     const DIRECTIONS: &'static [Self::Direction] = &[
         Direction3d::PosX,
@@ -135,6 +136,37 @@ impl<T: 'static> Space<T> for Grid3d<T> {
         }
     }
 
+    fn perp(&self, mut coordinate: Self::Coordinate, axis: Self::RotationAxis) -> Self::Coordinate {
+        let (c1, c2, d1, d2) = match axis {
+            Axis3d::X => (
+                &mut coordinate.y,
+                &mut coordinate.z,
+                self.dimensions.y,
+                self.dimensions.z,
+            ),
+            Axis3d::Y => (
+                &mut coordinate.z,
+                &mut coordinate.x,
+                self.dimensions.z,
+                self.dimensions.x,
+            ),
+            Axis3d::Z => (
+                &mut coordinate.x,
+                &mut coordinate.y,
+                self.dimensions.x,
+                self.dimensions.y,
+            ),
+        };
+
+        assert_eq!(d1, d2);
+
+        let c2_copy = *c2;
+        *c2 = *c1;
+        *c1 = d2 - 1 - c2_copy;
+
+        coordinate
+    }
+
     fn add_sub(
         &self,
         start: Self::Coordinate,
@@ -150,10 +182,10 @@ impl<T: 'static> Space<T> for Grid3d<T> {
         Some(Coordinate3d { x, y, z })
     }
 
-    fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
-        for z in 0..self.dimensions.z {
-            for y in 0..self.dimensions.y {
-                for x in 0..self.dimensions.x {
+    fn visit_coordinates(dimensions: Self::Coordinate, mut visitor: impl FnMut(Self::Coordinate)) {
+        for z in 0..dimensions.z {
+            for y in 0..dimensions.y {
+                for x in 0..dimensions.x {
                     visitor(Coordinate3d { x, y, z });
                 }
             }

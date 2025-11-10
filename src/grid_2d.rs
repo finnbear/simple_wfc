@@ -83,6 +83,7 @@ impl<T: 'static> Space<T> for Grid2d<T> {
     type Coordinate = Coordinate2d;
     type Direction = Direction2d;
     type Axis = Axis2d;
+    type RotationAxis = ();
 
     const DIRECTIONS: &'static [Self::Direction] = &[
         Direction2d::Right,
@@ -119,6 +120,14 @@ impl<T: 'static> Space<T> for Grid2d<T> {
         }
     }
 
+    fn perp(&self, coordinate: Self::Coordinate, _: Self::RotationAxis) -> Self::Coordinate {
+        assert_eq!(self.dimensions.x, self.dimensions.y);
+        Coordinate2d {
+            x: self.dimensions.y - 1 - coordinate.y,
+            y: coordinate.x,
+        }
+    }
+
     fn add_sub(
         &self,
         start: Self::Coordinate,
@@ -133,9 +142,9 @@ impl<T: 'static> Space<T> for Grid2d<T> {
         Some(Coordinate2d { x, y })
     }
 
-    fn visit_coordinates(&self, mut visitor: impl FnMut(Self::Coordinate)) {
-        for y in 0..self.dimensions.y {
-            for x in 0..self.dimensions.x {
+    fn visit_coordinates(dimensions: Self::Coordinate, mut visitor: impl FnMut(Self::Coordinate)) {
+        for y in 0..dimensions.y {
+            for x in 0..dimensions.x {
                 visitor(Coordinate2d { x, y });
             }
         }

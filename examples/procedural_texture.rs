@@ -132,8 +132,8 @@ fn test() {
         .build();
     let mut grid = Grid::new(
         Coordinate2d {
-            x: WIDTH_TILES as u32,
-            y: HEIGHT_TILES as u32,
+            x: WIDTH_TILES,
+            y: HEIGHT_TILES,
         },
         |_| S::all(),
     );
@@ -151,12 +151,7 @@ fn test() {
             let image_start_y = y * 8;
             let tile_start_x;
             let tile_start_y;
-            match grid[Coordinate2d {
-                x: x as u32,
-                y: y as u32,
-            }]
-            .clone()
-            {
+            match grid[Coordinate2d { x, y }].clone() {
                 a if a.has(A) => {
                     tile_start_x = 0;
                     tile_start_y = 0;
