@@ -1,5 +1,4 @@
-Kahuna
-======
+# Simple WFC
 
 [![Crates.io](https://img.shields.io/crates/v/simple_wfc.svg?label=simple_wfc)](https://crates.io/crates/simple_wfc) [![docs.rs](https://docs.rs/simple_wfc/badge.svg)](https://docs.rs/simple_wfc/)
 
