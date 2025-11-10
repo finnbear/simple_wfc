@@ -1,5 +1,5 @@
 use crate::{
-    rules::{SetCollapseObserver, SetCollapseRule, SetCollapseRuleBuilder},
+    rules::{SetCollapseObserver, SetCollapseRules, SetCollapseRulesBuilder},
     state::{State, StateSet},
     InvertDelta, Space,
 };
@@ -37,7 +37,10 @@ impl<T: Clone> ExtractedPatterns<T> {
         self.patterns[state.0 as usize].center.as_ref()
     }
 
-    pub fn unextract<Osp: Space<Option<T>>, Sp: Space<StateSet, Coordinate = Osp::Coordinate>>(
+    pub fn decode_superposition<
+        Osp: Space<Option<T>>,
+        Sp: Space<StateSet, Coordinate = Osp::Coordinate>,
+    >(
         &self,
         space: &Sp,
     ) -> (Osp, usize) {
@@ -71,7 +74,7 @@ impl<T> SetCollapseObserver for ExtractedPatterns<T> {
     }
 }
 
-pub fn extract_patterns<
+pub fn codify_patterns<
     T: Clone + PartialEq,
     Sp: Space<Option<T>> + Hash + Eq + Clone,
     Ssp: Space<StateSet, Coordinate = Sp::Coordinate, Direction = Sp::Direction, Axis = Sp::Axis>,
@@ -80,7 +83,7 @@ pub fn extract_patterns<
     size: Sp::Coordinate,
     flip_symmetries: &[Sp::Axis],
     rotational_symmetry: Option<Sp::RotationAxis>,
-) -> SetCollapseRule<ExtractedPatterns<T>>
+) -> SetCollapseRules<ExtractedPatterns<T>>
 where
     T: Tile<Sp::Axis, Sp::RotationAxis>,
 {
@@ -150,7 +153,7 @@ where
                 center: grid[neg_radius].clone(),
             };
         }
-        let mut builder = SetCollapseRuleBuilder::<Ssp, _>::new(ExtractedPatterns {
+        let mut builder = SetCollapseRulesBuilder::<Ssp, _>::new(ExtractedPatterns {
             patterns: extracted_patterns,
         });
 

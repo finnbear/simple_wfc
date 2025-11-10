@@ -1,4 +1,4 @@
-use crate::rules::{SetCollapseObserver, SetCollapseRule};
+use crate::rules::{SetCollapseObserver, SetCollapseRules};
 use crate::space::*;
 use crate::state::StateSet;
 use rand::{thread_rng, Rng};
@@ -37,7 +37,7 @@ fn find_next_to_collapse<Sp: Space<StateSet>>(
 /// the provided collapse rule.
 pub fn collapse<Sp: Space<StateSet>, O: SetCollapseObserver>(
     space: &mut Sp,
-    rule: &SetCollapseRule<O>,
+    rule: &SetCollapseRules<O>,
 ) {
     let mut unresolved_set = HashSet::new();
     let mut resolved_set = HashSet::new();
@@ -102,7 +102,7 @@ fn fill_neighbors<Sp: Space<StateSet>>(
 
 fn run_propogation<Sp: Space<StateSet>, O: SetCollapseObserver>(
     space: &mut Sp,
-    rule: &SetCollapseRule<O>,
+    rule: &SetCollapseRules<O>,
     to_propogate: &mut VecDeque<Sp::Coordinate>,
     neighbors: &mut [Option<Sp::Coordinate>],
     neighbor_states: &mut [Option<StateSet>],

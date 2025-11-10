@@ -1,14 +1,16 @@
 Kahuna
 ======
 
-[![Crates.io](https://img.shields.io/crates/v/kahuna.svg?label=Kahuna)](https://crates.io/crates/kahuna) [![docs.rs](https://docs.rs/kahuna/badge.svg)](https://docs.rs/kahuna/)
+[![Crates.io](https://img.shields.io/crates/v/simple_wfc.svg?label=simple_wfc)](https://crates.io/crates/simple_wfc) [![docs.rs](https://docs.rs/simple_wfc/badge.svg)](https://docs.rs/simple_wfc/)
 
-This crate is a basic extensible implementation of [Wave Function Collapse](https://www.youtube.com/watch?v=2SuvO4Gi7uY)
+This crate is a simple implementation of [Wave Function Collapse](https://github.com/mxgmn/WaveFunctionCollapse) a.k.a. [Model Synthesis](https://paulmerrell.org/model-synthesis/).
 
 ## Features
 
-- Support for custom grids of arbitrary dimension and topology, as long as there is an upper bound to cell neighbors
-- Basic square grid implementation provided
+- [x] 2D
+- [x] 3D
+- [x] Simple tiles
+- [x] Overlapping tiles
 
 ## License
 

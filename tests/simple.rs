@@ -1,9 +1,8 @@
-use wfc::{
+use simple_wfc::{
     collapse,
-    extract::{extract_patterns, Tile},
     grid_2d::{Axis2d, Coordinate2d, Grid2d},
-    state::{State, StateSet},
-    Space,
+    overlapping::{codify_patterns, Tile},
+    Space, State, StateSet,
 };
 
 #[test]
@@ -53,7 +52,7 @@ ____________________
     println!("input:");
     print_grid(&input);
 
-    let rule = extract_patterns::<_, _, Grid2d<StateSet>>(
+    let rule = codify_patterns::<_, _, Grid2d<StateSet>>(
         &input,
         Coordinate2d { x: 3, y: 3 },
         &[Axis2d::X, Axis2d::Y],
@@ -83,7 +82,8 @@ ____________________
 
         collapse(&mut space, &rule);
 
-        let (unextracted, overconstrained) = rule.observer().unextract::<Grid2d<_>, _>(&space);
+        let (unextracted, overconstrained) =
+            rule.observer().decode_superposition::<Grid2d<_>, _>(&space);
 
         println!("overconstrained: {overconstrained}");
         println!("output:");

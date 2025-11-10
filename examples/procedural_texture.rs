@@ -1,7 +1,7 @@
 use image::{ColorType, ImageFormat, RgbImage};
-use wfc::grid_2d::{Coordinate2d, Direction2d, Grid2d};
-use wfc::state::{State, StateSet};
-use wfc::{collapse, rules::*, Space};
+use simple_wfc::grid_2d::{Coordinate2d, Direction2d, Grid2d};
+use simple_wfc::rules::*;
+use simple_wfc::*;
 
 type S = StateSet;
 
@@ -38,7 +38,7 @@ fn test() {
     //
     // A-I form a 9-quadrant for rectangles, J is open space around them, and K can touch only J
 
-    let rule = SetCollapseRuleBuilder::<Grid2d<StateSet>, _>::new(UniformSetCollapseObserver)
+    let rule = SetCollapseRulesBuilder::<Grid2d<StateSet>, _>::new(UniformSetCollapseObserver)
         .allow(
             E,
             &[

@@ -3,7 +3,7 @@ use std::ops::{Index, IndexMut};
 
 /// Basic square grid implementing [`crate::Space`]
 ///
-/// Coordinates are specified as [`Coordinate2d`].
+/// Coordinates are specified as [`Coordinate3d`].
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
 pub struct Grid3d<T> {
     cells: Box<[T]>,

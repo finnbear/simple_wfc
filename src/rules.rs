@@ -22,7 +22,7 @@ impl SetCollapseObserver for UniformSetCollapseObserver {
     }
 }
 
-pub struct SetCollapseRule<O: SetCollapseObserver> {
+pub struct SetCollapseRules<O: SetCollapseObserver> {
     state_rules: Box<[(State, Box<[Option<StateSet>]>)]>,
     observer: O,
 }
@@ -45,16 +45,16 @@ impl StateRule {
     }
 }
 
-/// builder for [SetCollapseRule]
+/// Builder for [SetCollapseRule]
 ///
 /// Automatically collects used coordinate deltas and manages creating symmetric rules from asymmetric definitions
-pub struct SetCollapseRuleBuilder<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> {
+pub struct SetCollapseRulesBuilder<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> {
     state_rules: Vec<StateRule>,
     observer: O,
     _spooky: PhantomData<Sp>,
 }
 
-impl<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> SetCollapseRuleBuilder<Sp, O>
+impl<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> SetCollapseRulesBuilder<Sp, O>
 where
     Sp::Direction: Eq + Clone + InvertDelta,
 {
@@ -115,7 +115,7 @@ where
         &mut self.state_rules[index]
     }
 
-    pub fn build(self) -> SetCollapseRule<O> {
+    pub fn build(self) -> SetCollapseRules<O> {
         let mut state_rules = Vec::new();
         let mut remaining_state = StateSet::all();
         for mut proto_rule in self.state_rules {
@@ -136,14 +136,14 @@ where
                 vec![None; Sp::DIRECTIONS.len()].into_boxed_slice(),
             ));
         }
-        SetCollapseRule {
+        SetCollapseRules {
             state_rules: state_rules.into_boxed_slice(),
             observer: self.observer,
         }
     }
 }
 
-impl<O: SetCollapseObserver> SetCollapseRule<O> {
+impl<O: SetCollapseObserver> SetCollapseRules<O> {
     pub fn state_count(&self) -> u32 {
         self.state_rules.len() as u32
     }
