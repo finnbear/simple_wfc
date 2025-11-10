@@ -1,4 +1,5 @@
 use image::{ColorType, ImageFormat, RgbImage};
+use rand::thread_rng;
 use simple_wfc::grid_2d::{Coordinate2d, Direction2d, Grid2d};
 use simple_wfc::rules::*;
 use simple_wfc::*;
@@ -137,7 +138,7 @@ fn test() {
         },
         |_| S::all(),
     );
-    collapse(&mut grid, &rule);
+    collapse(&mut grid, &rule, &mut thread_rng());
 
     let image_bytes = include_bytes!("pattern.png");
     let input_image = image::load_from_memory_with_format(&image_bytes[..], ImageFormat::Png)

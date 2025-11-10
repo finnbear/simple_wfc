@@ -1,3 +1,4 @@
+use rand::thread_rng;
 use simple_wfc::{
     collapse,
     grid_2d::{Axis2d, Coordinate2d, Grid2d},
@@ -51,7 +52,7 @@ ____________________
             }
         });
 
-        collapse(&mut space, &rule);
+        collapse(&mut space, &rule, &mut thread_rng());
 
         let (unextracted, overconstrained) =
             rule.observer().decode_superposition::<Grid2d<_>, _>(&space);

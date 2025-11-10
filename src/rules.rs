@@ -4,13 +4,13 @@ use crate::{
     state::{State, StateSet},
     Space,
 };
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use std::marker::PhantomData;
 
 /// For collapsing superpositions.
 pub trait SetCollapseObserver {
     /// Arbitrarily collapse a superposition into a single state.
-    fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]);
+    fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>], rng: &mut impl Rng);
 }
 
 /// Collapse a superposition into a uniformly-random one of its states.
@@ -18,11 +18,10 @@ pub trait SetCollapseObserver {
 pub struct UniformSetCollapseObserver;
 
 impl SetCollapseObserver for UniformSetCollapseObserver {
-    fn observe(&self, cell: &mut StateSet, _: &[Option<StateSet>]) {
+    fn observe(&self, cell: &mut StateSet, _: &[Option<StateSet>], rng: &mut impl Rng) {
         let mut final_states = Vec::new();
         cell.collect_final_states(&mut final_states);
-        *cell =
-            StateSet::with_states(&[final_states[thread_rng().gen_range(0..final_states.len())]]);
+        *cell = StateSet::with_states(&[final_states[rng.gen_range(0..final_states.len())]]);
     }
 }
 
@@ -174,8 +173,8 @@ impl<O: SetCollapseObserver> SetCollapseRules<O> {
         }
     }
 
-    pub fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
-        self.observer.observe(cell, neighbors);
+    pub fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>], rng: &mut impl Rng) {
+        self.observer.observe(cell, neighbors, rng);
     }
 
     pub fn observer(&self) -> &O {

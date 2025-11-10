@@ -8,8 +8,9 @@ This crate is a simple implementation of [Wave Function Collapse](https://github
 
 - [x] 2D
 - [x] 3D
+- [ ] Custom collapse order
 - [ ] Periodic coordinate wrapping
-- [ ] Determinism
+- [x] Determinism
 - [x] Simple tiles
 - [x] Overlapping tiles
   - [x] Custom pattern size

@@ -5,7 +5,7 @@ use crate::{
     state::{State, StateSet},
     Space,
 };
-use rand::{distributions::WeightedIndex, prelude::Distribution, thread_rng};
+use rand::{distributions::WeightedIndex, prelude::Distribution, Rng};
 use std::{collections::HashMap, hash::Hash, num::NonZeroU32};
 
 #[derive(Clone)]
@@ -83,7 +83,7 @@ impl<T: Clone> ExtractedPatterns<T> {
 }
 
 impl<T> SetCollapseObserver for ExtractedPatterns<T> {
-    fn observe(&self, cell: &mut StateSet, _neighbors: &[Option<StateSet>]) {
+    fn observe(&self, cell: &mut StateSet, _neighbors: &[Option<StateSet>], rng: &mut impl Rng) {
         let dist = WeightedIndex::new((0..StateSet::len()).map(|s| {
             if cell.has(State::nth(s)) {
                 self.patterns[s as usize].frequency
@@ -93,7 +93,7 @@ impl<T> SetCollapseObserver for ExtractedPatterns<T> {
         }))
         .unwrap();
 
-        *cell = StateSet::with_states(&[State::nth(dist.sample(&mut thread_rng()) as u32)]);
+        *cell = StateSet::with_states(&[State::nth(dist.sample(rng) as u32)]);
     }
 }
 
