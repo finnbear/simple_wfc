@@ -1,5 +1,5 @@
-test:
-	cargo test --release -- --nocapture
+simple:
+	cargo run --example simple --release
 
-example:
+procedural_texture:
 	cargo run --example procedural_texture --release

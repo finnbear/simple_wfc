@@ -2,16 +2,19 @@ use bit_vec::BitVec;
 use std::ops::{BitAnd, BitOr, BitXor};
 use std::sync::atomic::{AtomicU32, Ordering};
 
-/// A state type which uses bits of a u64 to describe up to 64 separate possible final states.
+/// A superposition of multiple [State]'s.
+///
+/// You must use [Self::scope] to set the total number of states.
 #[derive(PartialEq, Eq, Clone, Hash, Debug)]
 pub struct StateSet(BitVec);
 
+/// One possible state at a location.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 pub struct State(pub(crate) u32);
 
 impl State {
-    /// Creates the `n`th unique state
-    pub fn state(n: u32) -> Self {
+    /// Creates the `n`th unique state (0-indexed).
+    pub fn nth(n: u32) -> Self {
         Self(n)
     }
 }
@@ -55,23 +58,28 @@ impl StateSet {
         Self(ret)
     }
 
+    /// The total number of states, as defined by [Self::scope].
     pub fn len() -> u32 {
         state_count()
     }
 
+    /// Superposition of all states.
     pub fn all() -> Self {
         Self(BitVec::from_elem(state_count() as usize, true))
     }
 
+    /// Total number of possible states, minus 1.
     pub fn entropy(&self) -> u32 {
         (self.0.count_ones() as u32).saturating_sub(1)
     }
 
+    /// Is `state` within the superposition?
     pub fn has(&self, state: State) -> bool {
         self.0.get(state.0 as usize).unwrap()
     }
 
-    pub fn has_any_of(&self, states: &Self) -> bool {
+    /// Are any of `states` within the superposition?
+    pub fn has_any(&self, states: &Self) -> bool {
         for (state, present) in states.0.iter().enumerate() {
             if present && self.0.get(state).unwrap() {
                 return true;
@@ -80,11 +88,13 @@ impl StateSet {
         false
     }
 
+    /// Remove `state` from the superposition.
     pub fn remove(&mut self, state: State) {
         self.0.set(state.0 as usize, false);
     }
 
-    pub fn clear_states(&mut self, states: &Self) {
+    /// Remove all `states` from the superposition.
+    pub fn remove_all(&mut self, states: &Self) {
         for (state, present) in states.0.iter().enumerate() {
             if present {
                 self.0.set(state, false);
@@ -92,18 +102,20 @@ impl StateSet {
         }
     }
 
+    /// Add `state` to the superposition.
     pub fn add(&mut self, state: State) {
         self.0.set(state.0 as usize, true);
     }
 
-    pub fn set_states(&mut self, states: &Self) {
+    /// Add all `states` to the superposition.
+    pub fn add_all(&mut self, states: &Self) {
         self.0.or(&states.0);
     }
 
-    pub fn collect_final_states(&self, states: &mut Vec<State>) {
+    pub(crate) fn collect_final_states(&self, states: &mut Vec<State>) {
         for (state, present) in self.0.iter().enumerate() {
             if present {
-                states.push(State::state(state as u32));
+                states.push(State::nth(state as u32));
             }
         }
     }

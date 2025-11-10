@@ -1,6 +1,6 @@
 //! Wave Function Collapse
 //!
-//! Provides an implementation of the wave function collapse algorithm.
+//! Provides a simple implementation of the wave function collapse algorithm.
 //!
 //! Wave function collapse works by iteratively "collapsing" a collecion of
 //! cells (such as a square grid) from all possible states to only the states

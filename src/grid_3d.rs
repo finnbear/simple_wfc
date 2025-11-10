@@ -1,7 +1,9 @@
-use crate::{InvertDelta, Space};
-use std::ops::{Index, IndexMut};
+//! 3D grid.
 
-/// Basic square grid implementing [`crate::Space`]
+use crate::Space;
+use std::ops::{Index, IndexMut, Neg};
+
+/// Basic 3D grid implementing [`crate::Space`].
 ///
 /// Coordinates are specified as [`Coordinate3d`].
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
@@ -10,6 +12,7 @@ pub struct Grid3d<T> {
     dimensions: Coordinate3d,
 }
 
+/// 3D coordinate.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Coordinate3d {
     pub x: u32,
@@ -17,6 +20,7 @@ pub struct Coordinate3d {
     pub z: u32,
 }
 
+/// Direction to adjacent neighbor in 3D space.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Direction3d {
     PosX,
@@ -27,6 +31,7 @@ pub enum Direction3d {
     NegZ,
 }
 
+/// 3D coordinate axis.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Axis3d {
     X,
@@ -59,8 +64,10 @@ impl Direction3d {
     }
 }
 
-impl InvertDelta for Direction3d {
-    fn invert_delta(&self) -> Self {
+impl Neg for Direction3d {
+    type Output = Self;
+
+    fn neg(self) -> Self {
         match self {
             Self::PosX => Self::NegX,
             Self::NegX => Self::PosX,

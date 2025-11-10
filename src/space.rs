@@ -1,16 +1,8 @@
 use std::{
     fmt::Debug,
     hash::Hash,
-    ops::{Index, IndexMut},
+    ops::{Index, IndexMut, Neg},
 };
-
-/// Represents coordinate deltas which have an inverse - the delta which undoes
-/// the change represented by this delta.
-///
-/// On a 2d grid, the inverse of `(2, -1)` would be `(-2, 1)`
-pub trait InvertDelta {
-    fn invert_delta(&self) -> Self;
-}
 
 /// Defines the space or "world" to run WFC on.
 ///
@@ -29,8 +21,10 @@ pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
     /// Coordinates for cells in the space
     type Coordinate: Default + Copy + Hash + Ord + Index<Self::Axis, Output = u32>;
     /// Spatial relationship between cells for accessing neighbors
-    type Direction: Copy + Debug + Eq + InvertDelta + 'static;
+    type Direction: Copy + Debug + Eq + Neg<Output = Self::Direction> + 'static;
+    /// Axes of translation/flipping.
     type Axis: Copy + Debug + Eq + 'static;
+    /// Axes of rotation.
     type RotationAxis: Copy + Debug + Eq + 'static;
 
     const DIRECTIONS: &'static [Self::Direction];
@@ -38,8 +32,10 @@ pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
     /// The grid will occupy `(0,0,0)..dimensions`.
     fn new(dimensions: Self::Coordinate, init_fn: impl FnMut(Self::Coordinate) -> T) -> Self;
 
+    /// The dimensions passed to [Space::new] during construction.
     fn dimensions(&self) -> Self::Coordinate;
 
+    /// Apply `map_fn` to each component of `coordinate`.
     fn map(
         coordinate: Self::Coordinate,
         map_fn: impl Fn(Self::Axis, u32) -> u32,

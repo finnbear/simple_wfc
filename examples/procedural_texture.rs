@@ -18,17 +18,17 @@ fn main() {
 
 #[allow(non_snake_case)]
 fn test() {
-    let A = State::state(0);
-    let B = State::state(1);
-    let C = State::state(2);
-    let D = State::state(3);
-    let E = State::state(4);
-    let F = State::state(5);
-    let G = State::state(6);
-    let H = State::state(7);
-    let I = State::state(8);
-    let J = State::state(9);
-    let K = State::state(10);
+    let A = State::nth(0);
+    let B = State::nth(1);
+    let C = State::nth(2);
+    let D = State::nth(3);
+    let E = State::nth(4);
+    let F = State::nth(5);
+    let G = State::nth(6);
+    let H = State::nth(7);
+    let I = State::nth(8);
+    let J = State::nth(9);
+    let K = State::nth(10);
 
     //
     //  A B C J

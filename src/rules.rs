@@ -1,15 +1,19 @@
-use std::marker::PhantomData;
+//! Collapse constraints.
 
 use crate::{
     state::{State, StateSet},
-    InvertDelta, Space,
+    Space,
 };
 use rand::{thread_rng, Rng};
+use std::marker::PhantomData;
 
+/// For collapsing superpositions.
 pub trait SetCollapseObserver {
+    /// Arbitrarily collapse a superposition into a single state.
     fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]);
 }
 
+/// Collapse a superposition into a uniformly-random one of its states.
 #[derive(Clone)]
 pub struct UniformSetCollapseObserver;
 
@@ -22,6 +26,7 @@ impl SetCollapseObserver for UniformSetCollapseObserver {
     }
 }
 
+/// Adjacency rules.
 pub struct SetCollapseRules<O: SetCollapseObserver> {
     state_rules: Box<[(State, Box<[Option<StateSet>]>)]>,
     observer: O,
@@ -45,7 +50,7 @@ impl StateRule {
     }
 }
 
-/// Builder for [SetCollapseRule]
+/// Builder for [SetCollapseRules]
 ///
 /// Automatically collects used coordinate deltas and manages creating symmetric rules from asymmetric definitions
 pub struct SetCollapseRulesBuilder<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> {
@@ -56,7 +61,7 @@ pub struct SetCollapseRulesBuilder<Sp: Space<StateSet>, O: SetCollapseObserver +
 
 impl<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> SetCollapseRulesBuilder<Sp, O>
 where
-    Sp::Direction: Eq + Clone + InvertDelta,
+    Sp::Direction: Eq + Clone,
 {
     pub fn new(observer: O) -> Self {
         Self {
@@ -86,9 +91,9 @@ where
     }
 
     fn allow_symmetric(&mut self, a: State, b: State, offset: &Sp::Direction) {
-        let offset_index = self.get_offset_index(offset.clone());
+        let offset_index = self.get_offset_index(*offset);
         self.get_rule(a).add_allowed(offset_index, b);
-        let offset_index = self.get_offset_index(offset.invert_delta());
+        let offset_index = self.get_offset_index(-*offset);
         self.get_rule(b).add_allowed(offset_index, a);
     }
 
@@ -154,7 +159,7 @@ impl<O: SetCollapseObserver> SetCollapseRules<O> {
                 for i in 0..neighbors.len() {
                     if let Some(neighbor_state) = &neighbors[i] {
                         let allow = if let Some(allowed_state) = &allowed_neighbors[i] {
-                            neighbor_state.has_any_of(allowed_state)
+                            neighbor_state.has_any(allowed_state)
                         } else {
                             false
                         };

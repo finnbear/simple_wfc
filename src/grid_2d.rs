@@ -1,7 +1,9 @@
-use crate::{InvertDelta, Space};
-use std::ops::{Index, IndexMut};
+//! 2D grid.
 
-/// Basic square grid implementing [`crate::Space`]
+use crate::Space;
+use std::ops::{Index, IndexMut, Neg};
+
+/// Basic 2D grid implementing [`crate::Space`].
 ///
 /// Coordinates are specified as [`Coordinate2d`].
 #[derive(Hash, PartialEq, Eq, Debug, Clone)]
@@ -10,20 +12,27 @@ pub struct Grid2d<T> {
     dimensions: Coordinate2d,
 }
 
+/// 2D coordinate.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Coordinate2d {
     pub x: u32,
     pub y: u32,
 }
 
+/// Direction to adjacent neighbor in 2D space.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Direction2d {
+    /// +x
     Right,
+    /// +y
     Up,
+    /// -x
     Left,
+    /// -y
     Down,
 }
 
+/// 2D coordinate axis.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Axis2d {
     X,
@@ -52,8 +61,10 @@ impl Direction2d {
     }
 }
 
-impl InvertDelta for Direction2d {
-    fn invert_delta(&self) -> Self {
+impl Neg for Direction2d {
+    type Output = Self;
+
+    fn neg(self) -> Self {
         match self {
             Self::Left => Self::Right,
             Self::Up => Self::Down,

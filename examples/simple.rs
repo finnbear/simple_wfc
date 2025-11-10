@@ -5,36 +5,7 @@ use simple_wfc::{
     Space, State, StateSet,
 };
 
-#[test]
-fn simple() {
-    /*
-    let input_dim = Coordinate2d { x: 22, y: 10 };
-    let input = Grid2d::new(input_dim, |c| {
-        if c.x < 2 || c.y < 2 || c.x > input_dim.x - 3 || c.y > input_dim.y - 3 {
-            return None;
-        }
-        Some(NonZeroU32::new(c.x % 3 + 1).unwrap())
-    });
-    */
-
-    /*
-            let input = parse_grid(r#"
-    ______________
-    ______________
-    ______________
-    ___xxxx_______
-    ___x++x_______
-    ___x++x_______
-    ___xxxxxxxx___
-    _______x++x___
-    _______x++x___
-    _______xxxx___
-    ______________
-    ______________
-    ______________
-            "#);
-        */
-
+fn main() {
     let input = parse_grid(
         r#"
 ____________________
@@ -72,7 +43,7 @@ ____________________
             {
                 let state = &mut space[coord];
                 for s in 0..StateSet::len() {
-                    let s = State::state(s);
+                    let s = State::nth(s);
                     if state.has(s) && rule.observer().center(s).is_some() {
                         state.remove(s);
                     }

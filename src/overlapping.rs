@@ -1,19 +1,35 @@
+//! Overlapping model.
+
 use crate::{
     rules::{SetCollapseObserver, SetCollapseRules, SetCollapseRulesBuilder},
     state::{State, StateSet},
-    InvertDelta, Space,
+    Space,
 };
 use rand::{distributions::WeightedIndex, prelude::Distribution, thread_rng};
 use std::{collections::HashMap, hash::Hash, num::NonZeroU32};
 
 #[derive(Clone)]
-pub struct Pattern<T> {
+struct Pattern<T> {
     center: Option<T>,
     frequency: u32,
 }
 
+/// A tile that may be flipped and rotated along with a pattern it is part of.
 pub trait Tile<F, R> {
+    /// Flip the tile across `axis`.
+    ///
+    /// For a tile that is symmetric over `axis`, this is a no-op.
     fn flip(self, axis: F) -> Self;
+
+    /// # 2D
+    ///
+    /// 90 degree counter-clockwise rotation. For a rotationally-symmetric block, this is a no-op.
+    ///
+    /// # 3D
+    ///
+    /// 90 degree rotation of `coordinate` around `axis` as if by looking down that axis
+    /// in a left-handed coordinate system and rotating counter-clockwise. For a
+    /// rotationally-symmetric block, this is a no-op.
     fn perp(self, axis: R) -> Self;
 }
 
@@ -27,16 +43,23 @@ impl<F, R> Tile<F, R> for NonZeroU32 {
     }
 }
 
+/// A list of patterns found in the input, with one per [`State`].
+///
+/// When collapsing superpositions, respects the frequency of each
+/// possible pattern.
 #[derive(Clone)]
 pub struct ExtractedPatterns<T> {
     patterns: Vec<Pattern<T>>,
 }
 
 impl<T: Clone> ExtractedPatterns<T> {
+    /// Get the tile at the center of the pattern corresponding to `state`.
     pub fn center(&self, state: State) -> Option<&T> {
         self.patterns[state.0 as usize].center.as_ref()
     }
 
+    /// Decode a pattern suposition, expected to have exactly one possible pattern
+    /// per location, by getting the central tiles.
     pub fn decode_superposition<
         Osp: Space<Option<T>>,
         Sp: Space<StateSet, Coordinate = Osp::Coordinate>,
@@ -48,7 +71,7 @@ impl<T: Clone> ExtractedPatterns<T> {
         let ret = Osp::new(space.dimensions(), |coord| {
             let states = &space[coord];
             for s in 0..StateSet::len() {
-                if states.has(State::state(s)) {
+                if states.has(State::nth(s)) {
                     return self.patterns[s as usize].center.clone();
                 }
             }
@@ -62,7 +85,7 @@ impl<T: Clone> ExtractedPatterns<T> {
 impl<T> SetCollapseObserver for ExtractedPatterns<T> {
     fn observe(&self, cell: &mut StateSet, _neighbors: &[Option<StateSet>]) {
         let dist = WeightedIndex::new((0..StateSet::len()).map(|s| {
-            if cell.has(State::state(s)) {
+            if cell.has(State::nth(s)) {
                 self.patterns[s as usize].frequency
             } else {
                 0
@@ -70,10 +93,11 @@ impl<T> SetCollapseObserver for ExtractedPatterns<T> {
         }))
         .unwrap();
 
-        *cell = StateSet::with_states(&[State::state(dist.sample(&mut thread_rng()) as u32)]);
+        *cell = StateSet::with_states(&[State::nth(dist.sample(&mut thread_rng()) as u32)]);
     }
 }
 
+/// Find patterns, of size `size`, in the `input`.
 pub fn codify_patterns<
     T: Clone + PartialEq,
     Sp: Space<Option<T>> + Hash + Eq + Clone,
@@ -165,7 +189,7 @@ where
                 for (pattern2, info2) in patterns.iter() {
                     let mut compatible = true;
                     Sp::visit_coordinates(pattern.dimensions(), |coordinate| {
-                        let coordinate2 = pattern.neighbor(coordinate, direction.invert_delta());
+                        let coordinate2 = pattern.neighbor(coordinate, -direction);
                         if let Some(coordinate2) = coordinate2 {
                             let value = pattern[coordinate].clone();
                             let value2 = pattern2[coordinate2].clone();
@@ -174,13 +198,13 @@ where
                         }
                     });
                     if !compatible {
-                        allowed.remove(State::state(info2.index));
+                        allowed.remove(State::nth(info2.index));
                     }
                 }
 
                 neighbors.push((direction, allowed));
             }
-            builder = builder.allow(State::state(info.index), &neighbors);
+            builder = builder.allow(State::nth(info.index), &neighbors);
         }
 
         builder.build()
