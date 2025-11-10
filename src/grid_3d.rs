@@ -27,6 +27,25 @@ pub enum Direction3d {
     NegZ,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Axis3d {
+    X,
+    Y,
+    Z,
+}
+
+impl Index<Axis3d> for Coordinate3d {
+    type Output = u32;
+
+    fn index(&self, index: Axis3d) -> &Self::Output {
+        match index {
+            Axis3d::X => &self.x,
+            Axis3d::Y => &self.y,
+            Axis3d::Z => &self.z,
+        }
+    }
+}
+
 impl Direction3d {
     fn offset(self) -> (i32, i32, i32) {
         match self {
@@ -74,6 +93,7 @@ impl<T> IndexMut<Coordinate3d> for Grid3d<T> {
 impl<T: 'static> Space<T> for Grid3d<T> {
     type Coordinate = Coordinate3d;
     type Direction = Direction3d;
+    type Axis = Axis3d;
 
     const DIRECTIONS: &'static [Self::Direction] = &[
         Direction3d::PosX,
@@ -85,7 +105,7 @@ impl<T: 'static> Space<T> for Grid3d<T> {
     ];
 
     /// Create a new `Grid3d`
-    fn new(dimensions: Coordinate3d, init_fn: impl Fn(Coordinate3d) -> T) -> Self {
+    fn new(dimensions: Coordinate3d, mut init_fn: impl FnMut(Coordinate3d) -> T) -> Self {
         let mut cells = Vec::with_capacity((dimensions.x * dimensions.y * dimensions.y) as usize);
         for z in 0..dimensions.z {
             for y in 0..dimensions.y {
@@ -104,11 +124,14 @@ impl<T: 'static> Space<T> for Grid3d<T> {
         self.dimensions
     }
 
-    fn map(coordinate: Self::Coordinate, map_fn: impl Fn(u32) -> u32) -> Self::Coordinate {
+    fn map(
+        coordinate: Self::Coordinate,
+        map_fn: impl Fn(Self::Axis, u32) -> u32,
+    ) -> Self::Coordinate {
         Coordinate3d {
-            x: map_fn(coordinate.x),
-            y: map_fn(coordinate.y),
-            z: map_fn(coordinate.z),
+            x: map_fn(Axis3d::X, coordinate.x),
+            y: map_fn(Axis3d::Y, coordinate.y),
+            z: map_fn(Axis3d::Z, coordinate.z),
         }
     }
 
@@ -121,7 +144,7 @@ impl<T: 'static> Space<T> for Grid3d<T> {
         let x = start.x.checked_add_signed(add.x as i32 - sub.x as i32)?;
         let y = start.y.checked_add_signed(add.y as i32 - sub.y as i32)?;
         let z = start.z.checked_add_signed(add.z as i32 - sub.z as i32)?;
-        if x >= self.dimensions.x - 1 || y >= self.dimensions.y - 1 || z >= self.dimensions.z - 1 {
+        if x >= self.dimensions.x || y >= self.dimensions.y || z >= self.dimensions.z {
             return None;
         }
         Some(Coordinate3d { x, y, z })

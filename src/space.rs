@@ -1,4 +1,8 @@
-use std::{fmt::Debug, hash::Hash, ops::IndexMut};
+use std::{
+    fmt::Debug,
+    hash::Hash,
+    ops::{Index, IndexMut},
+};
 
 /// Represents coordinate deltas which have an inverse - the delta which undoes
 /// the change represented by this delta.
@@ -23,18 +27,22 @@ pub trait InvertDelta {
 /// neighbor cell coordinates.
 pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
     /// Coordinates for cells in the space
-    type Coordinate: Default + Copy + Hash + Ord;
+    type Coordinate: Default + Copy + Hash + Ord + Index<Self::Axis, Output = u32>;
     /// Spatial relationship between cells for accessing neighbors
     type Direction: Copy + Debug + Eq + InvertDelta + 'static;
+    type Axis: Copy + Debug + Eq + 'static;
 
     const DIRECTIONS: &'static [Self::Direction];
 
     /// The grid will occupy `(0,0,0)..dimensions`.
-    fn new(dimensions: Self::Coordinate, init_fn: impl Fn(Self::Coordinate) -> T) -> Self;
+    fn new(dimensions: Self::Coordinate, init_fn: impl FnMut(Self::Coordinate) -> T) -> Self;
 
     fn dimensions(&self) -> Self::Coordinate;
 
-    fn map(coordinate: Self::Coordinate, map_fn: impl Fn(u32) -> u32) -> Self::Coordinate;
+    fn map(
+        coordinate: Self::Coordinate,
+        map_fn: impl Fn(Self::Axis, u32) -> u32,
+    ) -> Self::Coordinate;
 
     /// Computes `start + add - sub`, returning `Some` if the result is in the space.
     fn add_sub(

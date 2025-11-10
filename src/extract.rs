@@ -28,16 +28,19 @@ impl ExtractedPatterns {
     >(
         &self,
         space: &Sp,
-    ) -> Osp {
-        Osp::new(space.dimensions(), |coord| {
+    ) -> (Osp, usize) {
+        let mut overconstrained = 0;
+        let ret = Osp::new(space.dimensions(), |coord| {
             let states = &space[coord];
             for s in 0..StateSet::len() {
                 if states.has(State::state(s)) {
                     return self.patterns[s as usize].center;
                 }
             }
+            overconstrained += 1;
             None
-        })
+        });
+        (ret, overconstrained)
     }
 }
 
@@ -57,32 +60,49 @@ impl SetCollapseObserver for ExtractedPatterns {
 }
 
 pub fn extract_patterns<
-    Sp: Space<Option<NonZeroU32>> + Hash + Eq,
-    Ssp: Space<StateSet, Coordinate = Sp::Coordinate, Direction = Sp::Direction>,
+    Sp: Space<Option<NonZeroU32>> + Hash + Eq + Clone,
+    Ssp: Space<StateSet, Coordinate = Sp::Coordinate, Direction = Sp::Direction, Axis = Sp::Axis>,
 >(
     input: &Sp,
     size: Sp::Coordinate,
+    symmetries: &[Sp::Axis],
 ) -> SetCollapseRule<ExtractedPatterns> {
-    let neg_radius = Sp::map(size, |c| c / 2);
-    //let pos_radius = Sp::map(size, |c| c.div_ceil(2));
+    let neg_radius = Sp::map(size, |_, c| c / 2);
     struct PatternInfo {
         index: u32,
         frequency: u32,
     }
     let mut patterns = HashMap::<Sp, PatternInfo>::new();
     input.visit_coordinates(|input_coordinate| {
-        let grid = Sp::new(size, |pattern_coordinate| {
+        let mut grid = Sp::new(size, |pattern_coordinate| {
             let sample_coordinate =
                 input.add_sub(input_coordinate, pattern_coordinate, neg_radius)?;
             input[sample_coordinate]
         });
 
-        let next_index = patterns.len() as u32;
-        let entry = patterns.entry(grid).or_insert(PatternInfo {
-            index: next_index,
-            frequency: 0,
-        });
-        entry.frequency += 1;
+        for axis in std::iter::once(None).chain(
+            symmetries
+                .iter()
+                .chain(&symmetries[..symmetries.len().saturating_sub(1)])
+                .map(Some),
+        ) {
+            if let Some(axis) = axis {
+                let new_grid = Sp::new(size, |c| {
+                    let c = Sp::map(c, |a, c| if a == *axis { size[*axis] - 1 - c } else { c });
+
+                    grid[c]
+                });
+                grid = new_grid;
+            }
+
+            let next_index = patterns.len() as u32;
+            // TODO.
+            let entry = patterns.entry(grid.clone()).or_insert(PatternInfo {
+                index: next_index,
+                frequency: 0,
+            });
+            entry.frequency += 1;
+        }
     });
 
     StateSet::scope(patterns.len() as u32, || {

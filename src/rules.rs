@@ -161,6 +161,8 @@ impl<O: SetCollapseObserver> SetCollapseRule<O> {
                         if !allow {
                             cell.remove(*state)
                         }
+                    } else if allowed_neighbors[i].is_some() {
+                        //cell.remove(*state);
                     }
                 }
             }

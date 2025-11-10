@@ -24,6 +24,23 @@ pub enum Direction2d {
     Down,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Axis2d {
+    X,
+    Y,
+}
+
+impl Index<Axis2d> for Coordinate2d {
+    type Output = u32;
+
+    fn index(&self, index: Axis2d) -> &Self::Output {
+        match index {
+            Axis2d::X => &self.x,
+            Axis2d::Y => &self.y,
+        }
+    }
+}
+
 impl Direction2d {
     fn offset(self) -> (i32, i32) {
         match self {
@@ -65,6 +82,7 @@ impl<T> IndexMut<Coordinate2d> for Grid2d<T> {
 impl<T: 'static> Space<T> for Grid2d<T> {
     type Coordinate = Coordinate2d;
     type Direction = Direction2d;
+    type Axis = Axis2d;
 
     const DIRECTIONS: &'static [Self::Direction] = &[
         Direction2d::Right,
@@ -74,7 +92,7 @@ impl<T: 'static> Space<T> for Grid2d<T> {
     ];
 
     /// Create a new `Grid2d`
-    fn new(dimensions: Coordinate2d, init_fn: impl Fn(Coordinate2d) -> T) -> Self {
+    fn new(dimensions: Coordinate2d, mut init_fn: impl FnMut(Coordinate2d) -> T) -> Self {
         let mut cells = Vec::with_capacity((dimensions.x * dimensions.y) as usize);
         for y in 0..dimensions.y {
             for x in 0..dimensions.x {
@@ -91,10 +109,13 @@ impl<T: 'static> Space<T> for Grid2d<T> {
         self.dimensions
     }
 
-    fn map(coordinate: Self::Coordinate, map_fn: impl Fn(u32) -> u32) -> Self::Coordinate {
+    fn map(
+        coordinate: Self::Coordinate,
+        map_fn: impl Fn(Self::Axis, u32) -> u32,
+    ) -> Self::Coordinate {
         Coordinate2d {
-            x: map_fn(coordinate.x),
-            y: map_fn(coordinate.y),
+            x: map_fn(Axis2d::X, coordinate.x),
+            y: map_fn(Axis2d::Y, coordinate.y),
         }
     }
 
@@ -106,7 +127,7 @@ impl<T: 'static> Space<T> for Grid2d<T> {
     ) -> Option<Self::Coordinate> {
         let x = start.x.checked_add_signed(add.x as i32 - sub.x as i32)?;
         let y = start.y.checked_add_signed(add.y as i32 - sub.y as i32)?;
-        if x >= self.dimensions.x - 1 || y >= self.dimensions.y - 1 {
+        if x >= self.dimensions.x || y >= self.dimensions.y {
             return None;
         }
         Some(Coordinate2d { x, y })
