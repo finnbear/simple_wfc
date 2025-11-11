@@ -1,13 +1,14 @@
 use crate::rules::{SetCollapseObserver, SetCollapseRules};
 use crate::space::*;
 use crate::state::StateSet;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use std::collections::VecDeque;
 
 fn find_next_to_collapse<Sp: Space<StateSet>>(
     unresoved_set: &mut Vec<Sp::Coordinate>,
     lowest_entropy_set: &mut Vec<Sp::Coordinate>,
     space: &Sp,
+    rng: &mut impl Rng,
 ) -> Option<Sp::Coordinate> {
     let mut lowest_entropy = u32::MAX;
     lowest_entropy_set.clear();
@@ -28,7 +29,7 @@ fn find_next_to_collapse<Sp: Space<StateSet>>(
     if lowest_entropy_set.is_empty() {
         None
     } else {
-        Some(lowest_entropy_set[thread_rng().gen_range(0..lowest_entropy_set.len())])
+        Some(lowest_entropy_set[rng.gen_range(0..lowest_entropy_set.len())])
     }
 }
 
@@ -63,7 +64,7 @@ pub fn collapse<Sp: Space<StateSet>, O: SetCollapseObserver>(
     );
 
     while let Some(to_collapse) =
-        find_next_to_collapse(&mut unresolved_set, &mut lowest_entropy_set, space)
+        find_next_to_collapse(&mut unresolved_set, &mut lowest_entropy_set, space, rng)
     {
         to_propogate.clear();
         fill_neighbors(&*space, to_collapse, &mut neighbors);

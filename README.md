@@ -10,7 +10,7 @@ This crate is a simple implementation of [Wave Function Collapse](https://github
 - [x] 3D
 - [ ] Custom collapse order
 - [ ] Periodic coordinate wrapping
-- [x] Determinism
+- [x] Determinism (via custom `rand::Rng`)
 - [x] Simple tiles
 - [x] Overlapping tiles
   - [x] Custom pattern size

@@ -4,7 +4,7 @@ use crate::{
     state::{State, StateSet},
     Space,
 };
-use rand::Rng;
+use rand::{seq::IteratorRandom, Rng};
 use std::marker::PhantomData;
 
 /// For collapsing superpositions.
@@ -19,9 +19,7 @@ pub struct UniformSetCollapseObserver;
 
 impl SetCollapseObserver for UniformSetCollapseObserver {
     fn observe(&self, cell: &mut StateSet, _: &[Option<StateSet>], rng: &mut impl Rng) {
-        let mut final_states = Vec::new();
-        cell.collect_final_states(&mut final_states);
-        *cell = StateSet::with_states(&[final_states[rng.gen_range(0..final_states.len())]]);
+        *cell = StateSet::with_states(&[cell.iter().choose(rng).unwrap()]);
     }
 }
 
@@ -80,9 +78,7 @@ where
     /// delta will require that those coordinates are outside of world-space.
     pub fn allow(mut self, state: State, neighbors: &[(Sp::Direction, StateSet)]) -> Self {
         for (delta, neighbor) in neighbors {
-            let mut neighbor_states = Vec::new();
-            neighbor.collect_final_states(&mut neighbor_states);
-            for n_state in neighbor_states {
+            for n_state in neighbor.iter() {
                 self.allow_symmetric(state, n_state, delta);
             }
         }
@@ -132,9 +128,7 @@ where
                 proto_rule.allowed_neighbors.into_boxed_slice(),
             ));
         }
-        let mut remaining_states = Vec::new();
-        remaining_state.collect_final_states(&mut remaining_states);
-        for remaining_state in remaining_states {
+        for remaining_state in remaining_state.iter() {
             state_rules.push((
                 remaining_state,
                 vec![None; Sp::DIRECTIONS.len()].into_boxed_slice(),

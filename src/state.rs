@@ -112,12 +112,12 @@ impl StateSet {
         self.0.or(&states.0);
     }
 
-    pub(crate) fn collect_final_states(&self, states: &mut Vec<State>) {
-        for (state, present) in self.0.iter().enumerate() {
-            if present {
-                states.push(State::nth(state as u32));
-            }
-        }
+    pub(crate) fn iter(&self) -> impl Iterator<Item = State> + '_ {
+        self.0
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| *p)
+            .map(|(i, _)| State::nth(i as u32))
     }
 }
 
