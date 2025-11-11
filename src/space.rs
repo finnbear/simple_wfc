@@ -27,6 +27,7 @@ pub trait Space<T>: IndexMut<Self::Coordinate, Output = T> + 'static {
     /// Axes of rotation.
     type RotationAxis: Copy + Debug + Eq + 'static;
 
+    /// All possible values of [Space::Direction].
     const DIRECTIONS: &'static [Self::Direction];
 
     /// The grid will occupy `(0,0,0)..dimensions`.

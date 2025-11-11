@@ -14,6 +14,7 @@ pub struct Grid3d<T> {
 
 /// 3D coordinate.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[allow(missing_docs)]
 pub struct Coordinate3d {
     pub x: u32,
     pub y: u32,
@@ -22,6 +23,7 @@ pub struct Coordinate3d {
 
 /// Direction to adjacent neighbor in 3D space.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum Direction3d {
     PosX,
     NegX,
@@ -33,6 +35,7 @@ pub enum Direction3d {
 
 /// 3D coordinate axis.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum Axis3d {
     X,
     Y,

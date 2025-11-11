@@ -14,6 +14,7 @@ pub struct Grid2d<T> {
 
 /// 2D coordinate.
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[allow(missing_docs)]
 pub struct Coordinate2d {
     pub x: u32,
     pub y: u32,
@@ -34,6 +35,7 @@ pub enum Direction2d {
 
 /// 2D coordinate axis.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum Axis2d {
     X,
     Y,

@@ -119,6 +119,16 @@ impl StateSet {
             .filter(|(_, p)| *p)
             .map(|(i, _)| State::nth(i as u32))
     }
+
+    /// Filter states in place.
+    pub fn retain(&mut self, mut filter: impl FnMut(State) -> bool) {
+        for s in 0..StateSet::len() {
+            let s = State::nth(s);
+            if self.has(s) && !filter(s) {
+                self.remove(s);
+            }
+        }
+    }
 }
 
 impl BitOr<Self> for StateSet {

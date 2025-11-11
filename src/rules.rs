@@ -60,6 +60,7 @@ impl<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> SetCollapseRulesBuilde
 where
     Sp::Direction: Eq + Clone,
 {
+    /// Create an empty builder.
     pub fn new(observer: O) -> Self {
         Self {
             state_rules: Vec::new(),
@@ -115,6 +116,7 @@ where
         &mut self.state_rules[index]
     }
 
+    /// Build [SetCollapseRules].
     pub fn build(self) -> SetCollapseRules<O> {
         let mut state_rules = Vec::new();
         let mut remaining_state = StateSet::all();
@@ -142,11 +144,12 @@ where
 }
 
 impl<O: SetCollapseObserver> SetCollapseRules<O> {
+    /// Total number of states.
     pub fn state_count(&self) -> u32 {
         self.state_rules.len() as u32
     }
 
-    pub fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
+    pub(crate) fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
         for (state, allowed_neighbors) in &self.state_rules[..] {
             if cell.has(*state) {
                 for i in 0..neighbors.len() {
@@ -167,10 +170,17 @@ impl<O: SetCollapseObserver> SetCollapseRules<O> {
         }
     }
 
-    pub fn observe(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>], rng: &mut impl Rng) {
+    /// Collapse a state using the inner [SetCollapseObserver].
+    pub(crate) fn observe(
+        &self,
+        cell: &mut StateSet,
+        neighbors: &[Option<StateSet>],
+        rng: &mut impl Rng,
+    ) {
         self.observer.observe(cell, neighbors, rng);
     }
 
+    /// Get the inner [SetCollapseObserver].
     pub fn observer(&self) -> &O {
         &self.observer
     }
