@@ -12,6 +12,7 @@ use std::{collections::HashMap, hash::Hash, num::NonZeroU32};
 struct Pattern<T> {
     center: Option<T>,
     frequency: u32,
+    density: u32,
 }
 
 /// A tile that may be flipped and rotated along with a pattern it is part of.
@@ -50,12 +51,20 @@ impl<F, R> Tile<F, R> for NonZeroU32 {
 #[derive(Clone)]
 pub struct ExtractedPatterns<T> {
     patterns: Vec<Pattern<T>>,
+    density_bias: u32,
 }
 
 impl<T: Clone> ExtractedPatterns<T> {
     /// Get the tile at the center of the pattern corresponding to `state`.
     pub fn center(&self, state: State) -> Option<&T> {
         self.patterns[state.0 as usize].center.as_ref()
+    }
+
+    /// Set the density bias (frequency of `Some` tiles is multiplied by this
+    /// before weighted randomness) such that there is less empty space in the
+    /// output.
+    pub fn set_density_bias(&mut self, bias: u32) {
+        self.density_bias = bias;
     }
 
     /// Decode a pattern suposition, expected to have exactly one possible pattern
@@ -86,7 +95,10 @@ impl<T> SetCollapseObserver for ExtractedPatterns<T> {
     fn observe(&self, cell: &mut StateSet, _neighbors: &[Option<StateSet>], rng: &mut impl Rng) {
         let dist = WeightedIndex::new((0..StateSet::len()).map(|s| {
             if cell.has(State::nth(s)) {
-                self.patterns[s as usize].frequency
+                let pattern = &self.patterns[s as usize];
+                pattern
+                    .frequency
+                    .saturating_mul(pattern.density.saturating_mul(self.density_bias) + 1)
             } else {
                 0
             }
@@ -115,13 +127,17 @@ where
     struct PatternInfo {
         index: u32,
         frequency: u32,
+        density: u32,
     }
     let mut patterns = HashMap::<Sp, PatternInfo>::new();
     Sp::visit_coordinates(input.dimensions(), |input_coordinate| {
+        let mut density = 0;
         let mut grid = Sp::new(size, |pattern_coordinate| {
             let sample_coordinate =
                 input.add_sub(input_coordinate, pattern_coordinate, neg_radius)?;
-            input[sample_coordinate].clone()
+            let ret = input[sample_coordinate].clone();
+            density += ret.is_some() as u32;
+            ret
         });
 
         for axis in std::iter::once(None).chain(
@@ -157,6 +173,7 @@ where
                 let entry = patterns.entry(rotated_grid).or_insert(PatternInfo {
                     index: next_index,
                     frequency: 0,
+                    density,
                 });
                 entry.frequency += 1;
             }
@@ -167,7 +184,8 @@ where
         let mut extracted_patterns = vec![
             Pattern {
                 center: None,
-                frequency: 0
+                frequency: 0,
+                density: 0,
             };
             patterns.len()
         ];
@@ -175,10 +193,12 @@ where
             extracted_patterns[info.index as usize] = Pattern {
                 frequency: info.frequency,
                 center: grid[neg_radius].clone(),
+                density: info.density,
             };
         }
         let mut builder = SetCollapseRulesBuilder::<Ssp, _>::new(ExtractedPatterns {
             patterns: extracted_patterns,
+            density_bias: 0,
         });
 
         for (pattern, info) in patterns.iter() {

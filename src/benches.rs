@@ -13,6 +13,7 @@ use test::{black_box, Bencher};
 
 // Nov 11 2025
 // test benches::wfc_3x3_2d ... bench:  20,555,707.70 ns/iter (+/- 5,157,622.76)
+// test benches::wfc_3x3_2d ... bench:  21,666,191.80 ns/iter (+/- 6,012,055.63)
 
 #[bench]
 fn wfc_3x3_2d(b: &mut Bencher) {

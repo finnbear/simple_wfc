@@ -168,4 +168,9 @@ impl<O: SetCollapseObserver> SetCollapseRules<O> {
     pub fn observer(&self) -> &O {
         &self.observer
     }
+
+    /// Mutably borrow the inner [SetCollapseObserver].
+    pub fn observer_mut(&mut self) -> &mut O {
+        &mut self.observer
+    }
 }

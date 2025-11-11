@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use rand::thread_rng;
 use simple_wfc::{
     collapse,
@@ -7,6 +5,7 @@ use simple_wfc::{
     overlapping::{codify_patterns, Tile},
     Space, StateSet,
 };
+use std::time::Instant;
 
 fn main() {
     let profiler = pprof::ProfilerGuard::new(1000).unwrap();
@@ -28,12 +27,14 @@ ____________________
     println!("input:");
     print_grid(&input);
 
-    let rule = codify_patterns::<_, _, Grid2d<StateSet>>(
+    let mut rule = codify_patterns::<_, _, Grid2d<StateSet>>(
         &input,
         Coordinate2d { x: 3, y: 3 },
         &[Axis2d::X, Axis2d::Y],
         Some(()),
     );
+
+    rule.observer_mut().set_density_bias(1);
 
     println!("rules: {}", rule.state_count());
 
