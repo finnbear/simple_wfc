@@ -106,21 +106,22 @@ fn run_propogation<Sp: Space<StateSet>, O: SetCollapseObserver>(
 ) {
     while let Some(propogating) = to_propogate.pop_front() {
         let entropy_before = space[propogating].entropy();
+        if entropy_before == 0 {
+            continue;
+        }
+        fill_neighbors(&*space, propogating, neighbors);
+        for i in 0..Sp::DIRECTIONS.len() {
+            neighbor_states[i] = neighbors[i].map(|coord| space[coord].clone());
+        }
+        let cell = &mut space[propogating];
+        rule.collapse(cell, neighbor_states);
+        let entropy_after = cell.entropy();
 
-        if entropy_before != 0 {
-            fill_neighbors(&*space, propogating, neighbors);
+        if entropy_after < entropy_before {
             for i in 0..Sp::DIRECTIONS.len() {
-                neighbor_states[i] = neighbors[i].map(|coord| space[coord].clone());
-            }
-            rule.collapse(&mut space[propogating], neighbor_states);
-            let entropy_after = space[propogating].entropy();
-
-            if entropy_after < entropy_before {
-                for i in 0..Sp::DIRECTIONS.len() {
-                    if let Some(neighbor) = neighbors[i] {
-                        if space[neighbor].entropy() != 0 {
-                            to_propogate.push_back(neighbor);
-                        }
+                if let Some(neighbor) = neighbors[i] {
+                    if space[neighbor].entropy() != 0 {
+                        to_propogate.push_back(neighbor);
                     }
                 }
             }

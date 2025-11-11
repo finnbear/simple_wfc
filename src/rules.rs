@@ -151,19 +151,18 @@ impl<O: SetCollapseObserver> SetCollapseRules<O> {
 
     pub(crate) fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
         for (state, allowed_neighbors) in &self.state_rules[..] {
-            if cell.has(*state) {
-                for i in 0..neighbors.len() {
-                    if let Some(neighbor_state) = &neighbors[i] {
-                        let allow = if let Some(allowed_state) = &allowed_neighbors[i] {
-                            neighbor_state.has_any(allowed_state)
-                        } else {
-                            false
-                        };
-                        if !allow {
-                            cell.remove(*state)
-                        }
-                    } else if allowed_neighbors[i].is_some() {
-                        //cell.remove(*state);
+            if !cell.has(*state) {
+                continue;
+            }
+            for (i, neighbor_state) in neighbors.iter().enumerate() {
+                if let Some(neighbor_state) = neighbor_state {
+                    let allow = if let Some(allowed_state) = &allowed_neighbors[i] {
+                        neighbor_state.has_any(allowed_state)
+                    } else {
+                        false
+                    };
+                    if !allow {
+                        cell.remove(*state)
                     }
                 }
             }
