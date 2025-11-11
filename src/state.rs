@@ -2,11 +2,13 @@ use bit_vec::BitVec;
 use std::ops::{BitAnd, BitOr, BitXor};
 use std::sync::atomic::{AtomicU32, Ordering};
 
+type B = u64;
+
 /// A superposition of multiple [State]'s.
 ///
 /// You must use [Self::scope] to set the total number of states.
 #[derive(PartialEq, Eq, Clone, Hash, Debug)]
-pub struct StateSet(BitVec);
+pub struct StateSet(BitVec<B>);
 
 /// One possible state at a location.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
@@ -49,46 +51,54 @@ impl StateSet {
         })
     }
 
-    /// Creates a state representing the states numbered by members of `states`
+    /// Creates a superposition of `states`.
     pub fn with_states(states: &[State]) -> Self {
-        let mut ret = BitVec::from_elem(state_count() as usize, false);
-        for i in states {
-            ret.set(i.0 as usize, true);
+        let mut ret = BitVec::<B>::default();
+        ret.grow(state_count() as usize, false);
+        for state in states {
+            ret.set(state.0 as usize, true);
         }
         Self(ret)
     }
 
     /// The total number of states, as defined by [Self::scope].
+    #[inline(always)]
     pub fn len() -> u32 {
         state_count()
     }
 
     /// Superposition of all states.
     pub fn all() -> Self {
-        Self(BitVec::from_elem(state_count() as usize, true))
+        let mut ret = BitVec::<B>::default();
+        ret.grow(state_count() as usize, true);
+        Self(ret)
     }
 
     /// Total number of possible states, minus 1.
+    #[inline(always)]
     pub fn entropy(&self) -> u32 {
         (self.0.count_ones() as u32).saturating_sub(1)
     }
 
     /// Is `state` within the superposition?
+    #[inline(always)]
     pub fn has(&self, state: State) -> bool {
         self.0.get(state.0 as usize).unwrap()
     }
 
     /// Are any of `states` within the superposition?
+    #[inline(always)]
     pub fn has_any(&self, states: &Self) -> bool {
-        for (state, present) in states.0.iter().enumerate() {
-            if present && self.0.get(state).unwrap() {
-                return true;
-            }
-        }
-        false
+        self.0
+            .blocks()
+            .zip(states.0.blocks())
+            .map(|(a, b)| (a & b != 0) as u32)
+            .sum::<u32>()
+            > 0
     }
 
     /// Remove `state` from the superposition.
+    #[inline(always)]
     pub fn remove(&mut self, state: State) {
         self.0.set(state.0 as usize, false);
     }
@@ -103,6 +113,7 @@ impl StateSet {
     }
 
     /// Add `state` to the superposition.
+    #[inline(always)]
     pub fn add(&mut self, state: State) {
         self.0.set(state.0 as usize, true);
     }

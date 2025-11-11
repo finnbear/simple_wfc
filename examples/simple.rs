@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use rand::thread_rng;
 use simple_wfc::{
     collapse,
@@ -7,6 +9,8 @@ use simple_wfc::{
 };
 
 fn main() {
+    let profiler = pprof::ProfilerGuard::new(1000).unwrap();
+
     let input = parse_grid(
         r#"
 ____________________
@@ -34,29 +38,47 @@ ____________________
     println!("rules: {}", rule.state_count());
 
     StateSet::scope(rule.state_count(), || {
-        let mut space = Grid2d::new(Coordinate2d { x: 50, y: 20 }, |_| StateSet::all());
+        let start_collapse = Instant::now();
 
-        <Grid2d<StateSet>>::visit_coordinates(space.dimensions(), |coord| {
+        let dimensions = Coordinate2d { x: 100, y: 100 };
+        let mut space = Grid2d::new(dimensions, |coord| {
+            let mut state = StateSet::all();
+
             if coord.x == 0
                 || coord.y == 0
-                || coord.x == space.dimensions().x - 1
-                || coord.y == space.dimensions().y - 1
+                || coord.x == dimensions.x - 1
+                || coord.y == dimensions.y - 1
             {
-                space[coord].retain(|s| rule.observer().center(s).is_none());
+                state.retain(|s| rule.observer().center(s).is_none());
             }
+
+            state
         });
 
         collapse(&mut space, &rule, &mut thread_rng());
 
+        let collapse_time = start_collapse.elapsed().as_secs_f32();
+
+        let start_decode = Instant::now();
+
         let (unextracted, overconstrained) =
             rule.observer().decode_superposition::<Grid2d<_>, _>(&space);
 
+        let decode_time = start_decode.elapsed().as_secs_f32();
+
         println!("overconstrained: {overconstrained}");
+        println!("collapse: {collapse_time:.3}s decode: {decode_time:.3}s");
         println!("output:");
         print_grid(&unextracted);
 
         //println!("{unextracted:?}");
     });
+
+    if let Ok(report) = profiler.report().build() {
+        let mut buf = Vec::new();
+        report.flamegraph(&mut buf).unwrap();
+        std::fs::write("./flamegraph.svg", buf).unwrap();
+    }
 }
 
 fn parse_grid(s: &str) -> Grid2d<Option<CharTile>> {

@@ -25,12 +25,12 @@ impl SetCollapseObserver for UniformSetCollapseObserver {
 
 /// Adjacency rules.
 pub struct SetCollapseRules<O: SetCollapseObserver> {
-    state_rules: Box<[(State, Box<[Option<StateSet>]>)]>,
+    state_rules: Box<[Box<[Option<StateSet>]>]>,
     observer: O,
 }
 
+#[derive(Clone, Default)]
 struct StateRule {
-    state: State,
     allowed_neighbors: Vec<Option<StateSet>>,
 }
 
@@ -51,7 +51,7 @@ impl StateRule {
 ///
 /// Automatically collects used coordinate deltas and manages creating symmetric rules from asymmetric definitions
 pub struct SetCollapseRulesBuilder<Sp: Space<StateSet>, O: SetCollapseObserver + Clone> {
-    state_rules: Vec<StateRule>,
+    state_rules: Vec<Option<StateRule>>,
     observer: O,
     _spooky: PhantomData<Sp>,
 }
@@ -63,7 +63,7 @@ where
     /// Create an empty builder.
     pub fn new(observer: O) -> Self {
         Self {
-            state_rules: Vec::new(),
+            state_rules: vec![None; StateSet::len() as usize],
             observer,
             _spooky: PhantomData,
         }
@@ -103,38 +103,21 @@ where
     }
 
     fn get_rule(&mut self, state: State) -> &mut StateRule {
-        for i in 0..self.state_rules.len() {
-            if self.state_rules[i].state == state {
-                return &mut self.state_rules[i];
-            }
-        }
-        self.state_rules.push(StateRule {
-            state,
-            allowed_neighbors: Vec::new(),
-        });
-        let index = self.state_rules.len() - 1;
-        &mut self.state_rules[index]
+        self.state_rules[state.0 as usize].get_or_insert_default()
     }
 
     /// Build [SetCollapseRules].
     pub fn build(self) -> SetCollapseRules<O> {
-        let mut state_rules = Vec::new();
-        let mut remaining_state = StateSet::all();
-        for mut proto_rule in self.state_rules {
-            while proto_rule.allowed_neighbors.len() < Sp::DIRECTIONS.len() {
-                proto_rule.allowed_neighbors.push(None);
+        let mut state_rules = Vec::with_capacity(StateSet::len() as usize);
+        for proto_rule in self.state_rules {
+            if let Some(mut proto_rule) = proto_rule {
+                while proto_rule.allowed_neighbors.len() < Sp::DIRECTIONS.len() {
+                    proto_rule.allowed_neighbors.push(None);
+                }
+                state_rules.push(proto_rule.allowed_neighbors.into_boxed_slice());
+            } else {
+                state_rules.push(vec![None; Sp::DIRECTIONS.len()].into_boxed_slice());
             }
-            remaining_state.remove(proto_rule.state);
-            state_rules.push((
-                proto_rule.state,
-                proto_rule.allowed_neighbors.into_boxed_slice(),
-            ));
-        }
-        for remaining_state in remaining_state.iter() {
-            state_rules.push((
-                remaining_state,
-                vec![None; Sp::DIRECTIONS.len()].into_boxed_slice(),
-            ));
         }
         SetCollapseRules {
             state_rules: state_rules.into_boxed_slice(),
@@ -150,8 +133,9 @@ impl<O: SetCollapseObserver> SetCollapseRules<O> {
     }
 
     pub(crate) fn collapse(&self, cell: &mut StateSet, neighbors: &[Option<StateSet>]) {
-        for (state, allowed_neighbors) in &self.state_rules[..] {
-            if cell.has(*state) {
+        for (state, allowed_neighbors) in self.state_rules.iter().enumerate() {
+            let state = State::nth(state as u32);
+            if cell.has(state) {
                 for i in 0..neighbors.len() {
                     if let Some(neighbor_state) = &neighbors[i] {
                         let allow = if let Some(allowed_state) = &allowed_neighbors[i] {
@@ -160,11 +144,11 @@ impl<O: SetCollapseObserver> SetCollapseRules<O> {
                             false
                         };
                         if !allow {
-                            cell.remove(*state)
+                            cell.remove(state)
                         }
-                    } else if allowed_neighbors[i].is_some() {
-                        //cell.remove(*state);
-                    }
+                    } /* else if allowed_neighbors[i].is_some() {
+                          cell.remove(*state);
+                      } */
                 }
             }
         }

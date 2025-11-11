@@ -11,6 +11,9 @@ use test::{black_box, Bencher};
 // Nov 10 2025
 // test benches::wfc_3x3_2d ... bench: 142,352,941.90 ns/iter (+/- 42,112,330.60)
 
+// Nov 11 2025
+// test benches::wfc_3x3_2d ... bench:  20,555,707.70 ns/iter (+/- 5,157,622.76)
+
 #[bench]
 fn wfc_3x3_2d(b: &mut Bencher) {
     let input = parse_grid(
