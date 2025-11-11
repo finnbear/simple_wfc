@@ -103,7 +103,7 @@ where
     }
 
     fn get_rule(&mut self, state: State) -> &mut StateRule {
-        self.state_rules[state.0 as usize].get_or_insert_default()
+        self.state_rules[state.0 as usize].get_or_insert_with(Default::default)
     }
 
     /// Build [SetCollapseRules].
