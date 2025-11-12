@@ -17,6 +17,7 @@ use test::{black_box, Bencher};
 // test benches::wfc_3x3_2d ... bench:  17,395,783.80 ns/iter (+/- 5,049,007.16)
 // test benches::wfc_3x3_2d ... bench:  16,151,594.20 ns/iter (+/- 4,025,016.22)
 // test benches::wfc_3x3_2d ... bench:  17,343,374.10 ns/iter (+/- 4,266,848.80) - fn
+// test benches::wfc_3x3_2d ... bench:  12,905,514.40 ns/iter (+/- 3,673,940.29) - dup propagate
 
 #[bench]
 fn wfc_3x3_2d(b: &mut Bencher) {

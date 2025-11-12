@@ -133,7 +133,7 @@ fn run_propogation<Sp: Space<StateSet>, O: SetCollapseObserver>(
             if entropy_after < entropy_before {
                 for i in 0..Sp::DIRECTIONS.len() {
                     if let Some(neighbor) = neighbors[i] {
-                        if space[neighbor].entropy() != 0 {
+                        if space[neighbor].entropy() != 0 && !to_propogate.contains(&neighbor) {
                             to_propogate.push_back(neighbor);
                         }
                     }
