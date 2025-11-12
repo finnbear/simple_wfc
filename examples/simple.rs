@@ -56,7 +56,9 @@ ____________________
             state
         });
 
-        collapse(&mut space, &rule, &mut thread_rng());
+        collapse(&mut space, &rule, &mut thread_rng(), |_progress| {
+            //println!("{:.2}", _progress.resolved as f32 / _progress.total as f32);
+        });
 
         let collapse_time = start_collapse.elapsed().as_secs_f32();
 

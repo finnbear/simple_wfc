@@ -17,13 +17,14 @@ fn find_next_to_collapse<Sp: Space<StateSet>>(
         if entropy == 0 {
             return false;
         }
+        if entropy > lowest_entropy {
+            return true;
+        }
         if entropy < lowest_entropy {
             lowest_entropy = entropy;
             lowest_entropy_set.clear();
-            lowest_entropy_set.push(*unresolved);
-        } else if entropy == lowest_entropy {
-            lowest_entropy_set.push(*unresolved);
         }
+        lowest_entropy_set.push(*unresolved);
         true
     });
     if lowest_entropy_set.is_empty() {
@@ -33,28 +34,38 @@ fn find_next_to_collapse<Sp: Space<StateSet>>(
     }
 }
 
+/// Incremental WFC progress.
+#[derive(Debug, Clone)]
+pub struct Progress {
+    /// Cells that have no remaining uncertainty.
+    pub resolved: u32,
+    /// Total number of cells.
+    pub total: u32,
+}
+
 /// Perform the wave function collapse algorithm on a given state-space with
 /// the provided collapse rule.
 pub fn collapse<Sp: Space<StateSet>, O: SetCollapseObserver>(
     space: &mut Sp,
     rule: &SetCollapseRules<O>,
     rng: &mut impl Rng,
+    mut on_progress: impl FnMut(Progress),
 ) {
     let mut unresolved_set = Vec::new();
+    let mut to_propogate = VecDeque::new();
     let mut lowest_entropy_set = Vec::new();
+    let mut cells = 0u32;
     Sp::visit_coordinates(space.dimensions(), |coord| {
         if space[coord].entropy() > 0 {
             unresolved_set.push(coord);
+            to_propogate.push_back(coord);
         }
+        cells += 1;
     });
     let mut neighbors = vec![None; Sp::DIRECTIONS.len()].into_boxed_slice();
     let mut neighbor_states =
         vec![Option::<StateSet>::None; Sp::DIRECTIONS.len()].into_boxed_slice();
-    let mut to_propogate = VecDeque::new();
 
-    for coordinate in unresolved_set.iter() {
-        to_propogate.push_back(*coordinate);
-    }
     run_propogation(
         space,
         rule,
@@ -66,6 +77,10 @@ pub fn collapse<Sp: Space<StateSet>, O: SetCollapseObserver>(
     while let Some(to_collapse) =
         find_next_to_collapse(&mut unresolved_set, &mut lowest_entropy_set, space, rng)
     {
+        on_progress(Progress {
+            resolved: cells - unresolved_set.len() as u32,
+            total: cells,
+        });
         to_propogate.clear();
         fill_neighbors(&*space, to_collapse, &mut neighbors);
         for i in 0..Sp::DIRECTIONS.len() {

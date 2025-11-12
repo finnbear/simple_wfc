@@ -138,7 +138,7 @@ fn test() {
         },
         |_| S::all(),
     );
-    collapse(&mut grid, &rule, &mut thread_rng());
+    collapse(&mut grid, &rule, &mut thread_rng(), |_| {});
 
     let image_bytes = include_bytes!("pattern.png");
     let input_image = image::load_from_memory_with_format(&image_bytes[..], ImageFormat::Png)

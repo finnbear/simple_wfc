@@ -92,9 +92,7 @@ impl StateSet {
         self.0
             .blocks()
             .zip(states.0.blocks())
-            .map(|(a, b)| (a & b != 0) as u32)
-            .sum::<u32>()
-            > 0
+            .any(|(a, b)| a & b != 0)
     }
 
     /// Remove `state` from the superposition.

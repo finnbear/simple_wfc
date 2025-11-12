@@ -14,6 +14,9 @@ use test::{black_box, Bencher};
 // Nov 11 2025
 // test benches::wfc_3x3_2d ... bench:  20,555,707.70 ns/iter (+/- 5,157,622.76)
 // test benches::wfc_3x3_2d ... bench:  21,666,191.80 ns/iter (+/- 6,012,055.63)
+// test benches::wfc_3x3_2d ... bench:  17,395,783.80 ns/iter (+/- 5,049,007.16)
+// test benches::wfc_3x3_2d ... bench:  16,151,594.20 ns/iter (+/- 4,025,016.22)
+// test benches::wfc_3x3_2d ... bench:  17,343,374.10 ns/iter (+/- 4,266,848.80) - fn
 
 #[bench]
 fn wfc_3x3_2d(b: &mut Bencher) {
@@ -42,7 +45,12 @@ ____________________
         b.iter(move || {
             let mut space = Grid2d::new(Coordinate2d { x: 20, y: 20 }, |_| StateSet::all());
 
-            collapse(black_box(&mut space), black_box(&rule), &mut thread_rng());
+            collapse(
+                black_box(&mut space),
+                black_box(&rule),
+                &mut thread_rng(),
+                |_| {},
+            );
             black_box(rule.observer().decode_superposition::<Grid2d<_>, _>(&space));
         })
     });
